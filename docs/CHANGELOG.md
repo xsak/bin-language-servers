@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### 2026-10-11: live test in Gram and Zed
+
+- Gram 3.3.0: `bls json`, `yaml`, `bash` and (through the bls extension) `bls toml` run and work.
+- `docs/EDITORS.md`: tested minimal Gram snippet, list of Gram servers bls does not replace.
+- `docs/EDITORS.md`: how to silence Gram's "Download disabled" errors (Tailwind, package-version-server) and a warning about pasted `lsp` blocks.
+- `docs/EDITORS.md`: Gram attaches `vscode-html-language-server` to HTML next to `superhtml`; disable it (`bls html` runs via `superhtml`, confirmed).
+- Gram: HTML through `bls html` (server name `superhtml`) and the `language_servers` exclusions tested live; no more "Download disabled" notices.
+- Zed: `bls json` started after adding the `lsp` overrides; works. Snippet in `docs/EDITORS.md`.
+
 ### 2026-10-11: security and robustness review
 
 Changed:

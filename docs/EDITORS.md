@@ -49,6 +49,63 @@ Notes:
 - For Ansible, install Gram's `ansible` extension first. It provides the language and the
   `ansible-language-server` name; `bls` replaces its binary.
 
+### Minimal snippet for your current Gram setup
+
+Matches the extensions installed in Gram now (`ini`, `toml`, `sql`, `log`, `ssh-config`, `bls`). Merge it into
+the `"lsp"` block of `~/.config/gram/settings.jsonc`:
+
+```jsonc
+"lsp": {
+  // tested live in Gram 3.3.0 (2026-10-11)
+  "json-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["json"] } },
+  "yaml-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["yaml"] } },
+  "bash-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["bash"] } },
+
+  // built in; tested live in Gram 3.3.0 together with the `languages` block below
+  "superhtml":            { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["html"] } },
+
+  // Zed's name, never seen in Gram's log: check with `dev: open language server logs` on a .css file
+  "vscode-css-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["css"] } }
+
+  // Only after installing the matching Gram extension (see the sections below):
+  //   "docker-language-server": ... ["docker"]   (dockerfile / docker-compose extension)
+  //   "nginx":                 ... ["nginx"]     (nginx extension)
+  //   "ansible-language-server": ... ["ansible"] (ansible extension)
+}
+```
+
+No `lsp` entry is needed for INI, TOML and Apache: the `bls` extension declares `bls-ini`, `bls-toml` and
+`bls-apache`, and finds `bls` on `PATH`. TOML was tested live in Gram (a `bls toml` process starts when a
+`.toml` file is opened).
+
+Gram servers that bls does not replace, because bls has no equivalent: `lemminx` (XML), `tailwindcss-language-server`,
+`package-version-server`, `ruff` and `basedpyright` (Python). They stay disabled by Gram ("Download disabled"
+in the log) unless you provide a binary; `ruff` and `ty` are Node-free and can be installed separately.
+
+**Silencing "Download disabled" errors.** Gram starts some Node-based servers on its own and then cannot download
+them, so every file of that language logs an error (the editor shows a notice). Switch the server off for the
+languages where it appears, for example Tailwind on HTML and CSS (the `!name` / `...` syntax of `language_servers` works in
+Gram 3.3.0, tested 2026-10-11):
+
+```jsonc
+"languages": {
+  "HTML": { "language_servers": ["!tailwindcss-language-server", "!vscode-html-language-server", "..."] },
+  "CSS":  { "language_servers": ["!tailwindcss-language-server", "..."] }
+}
+```
+
+Gram attaches two HTML servers by default: `superhtml` (the one pointed at `bls html` above, confirmed running) and
+`vscode-html-language-server` (Node, cannot be downloaded), which is why it is switched off for HTML.
+
+`package-version-server` (version hints in `package.json`) is a Rust binary and needs
+`"package-version-server": { "binary": { "allow_binary_download": true } }` inside `"lsp"` to start.
+
+**Merging snippets:** pasting an `"lsp": { ... }` block over the existing one removes the entries that are not
+in the snippet (this dropped the `package-version-server` entry once). Add the new lines inside the existing block.
+
+`"prettier"` and `"node"` in Gram's settings are inert in a Node-free Gram; setting
+`"prettier": { "allowed": false }` just makes that explicit.
+
 ### Ready now: every language
 
 These work today (`bls list`). Your Gram `settings.jsonc` already has a `json-language-server` entry, so
