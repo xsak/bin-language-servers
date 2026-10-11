@@ -124,3 +124,8 @@ scripts/go.sh       run the Go toolchain in a container
 `internal/webdata` embeds the HTML and CSS data of
 [microsoft/vscode-custom-data](https://github.com/microsoft/vscode-custom-data) (MIT License, see
 `internal/webdata/LICENSE.vscode-custom-data`). It is plain JSON downloaded by `go generate`; no npm is involved.
+
+## License
+
+`bls` is released under the [MIT License](LICENSE). The embedded third-party data keeps its own licenses
+(see above and `internal/webdata/LICENSE.vscode-custom-data`).

@@ -20,7 +20,7 @@ build_target() {
     mkdir -p "$stage"
     GOOS="$os" GOARCH="$arch" "$REPO_ROOT/scripts/go.sh" build -trimpath \
         -ldflags "-s -w -X main.version=$VERSION" -o "dist/stage/$name/bls" ./cmd/bls
-    cp "$REPO_ROOT/README.md" "$stage/"
+    cp "$REPO_ROOT/README.md" "$REPO_ROOT/LICENSE" "$stage/"
     mkdir -p "$stage/third-party"
     cp "$REPO_ROOT/internal/webdata/LICENSE.vscode-custom-data" "$stage/third-party/"
     tar -C "$REPO_ROOT/dist/stage" -czf "$OUT/$name.tar.gz" "$name"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the Zed/Gram extension (Rust -> wasm32-wasip2) in a container; Rust is never installed on
-# the host. Output: dist/zed-extension/ (extension.toml, extension.wasm, languages/).
+# the host. Output: dist/zed-extension/ (extension.toml, extension.wasm, languages/, LICENSE).
 #
 #   scripts/zed-extension.sh            # build
 #   scripts/zed-extension.sh install    # build, then copy into Gram's and Zed's extension dirs
@@ -31,7 +31,7 @@ build() {
     rm -rf "$OUT"
     mkdir -p "$OUT"
     cp "$CACHE_DIR/cargo/target-zed/wasm32-wasip2/release/bls_zed.wasm" "$OUT/extension.wasm"
-    cp "$REPO_ROOT/editors/zed/extension.toml" "$OUT/"
+    cp "$REPO_ROOT/editors/zed/extension.toml" "$REPO_ROOT/LICENSE" "$OUT/"
     cp -r "$REPO_ROOT/editors/zed/languages" "$OUT/"
     printf 'built %s\n' "$OUT"
 }

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### 2026-10-11: license
+
+- Added the MIT `LICENSE`; release archives include it.
+
 ### 2026-10-11: milestone 8, doctor, releases, HTML formatting
 
 Added:

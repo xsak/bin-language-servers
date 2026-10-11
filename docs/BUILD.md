@@ -100,7 +100,7 @@ scripts/zed-extension.sh [install]
 
 `make dist` (`scripts/dist.sh`) cross-compiles in the Go container for `linux/amd64`, `linux/arm64`,
 `darwin/amd64` and `darwin/arm64` (static, `CGO_ENABLED=0`), packs `bls_<version>_<os>_<arch>.tar.gz` (binary,
-README, third-party license), adds `bls-zed-extension_<version>.tar.gz` and writes `SHA256SUMS`, all in
+README, LICENSE, third-party license), adds `bls-zed-extension_<version>.tar.gz` and writes `SHA256SUMS`, all in
 `dist/release/`. `TARGETS="linux/amd64" make dist` limits the targets; `SKIP_EXTENSION=1` skips the extension.
 
 GitHub Actions use exactly the same targets with docker:
