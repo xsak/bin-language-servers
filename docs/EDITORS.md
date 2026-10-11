@@ -49,7 +49,7 @@ Notes:
 - For Ansible, install Gram's `ansible` extension first. It provides the language and the
   `ansible-language-server` name; `bls` replaces its binary.
 
-### Ready now: JSON, YAML, Bash, Dockerfile, Compose and Ansible
+### Ready now: every language
 
 These work today (`bls list`). Your Gram `settings.jsonc` already has a `json-language-server` entry, so
 extend it and add the others:
@@ -78,6 +78,13 @@ extend it and add the others:
   },
   "dockerfile-language-server": {
     "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["dockerfile"] }
+  },
+  "vscode-css-language-server": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["css"] }
+  },
+  // Gram's HTML server is superhtml (Zig, not Node). Replace it, or keep it and skip this entry.
+  "superhtml": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["html"] }
   },
   // needs the "ansible" extension, which defines the Ansible language and this server name
   "ansible-language-server": {

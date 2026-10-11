@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### 2026-10-11: milestone 6, HTML + CSS
+
+Added:
+
+- `internal/webdata`: embedded vscode-custom-data (MIT) HTML/CSS data, refreshed with `go generate` in the
+  container.
+- `bls css`: parser with nesting, checks (unknown properties/at-rules/pseudo-selectors, invalid keyword
+  values), completion, hover with specificity, outline, comment-preserving formatter.
+- `bls html`: parser with implied end tags/void/raw-text elements, checks (structure, duplicate
+  attributes/ids, unknown elements, img alt), completion (elements, close tags, attributes, values,
+  entities), hover, outline, linked editing; CSS features inside `<style>` and `style=""`.
+- Server: `textDocument/linkedEditingRange`.
+
+Checked live with the release build (10.1 MB): HTML structure and inline CSS errors, CSS checks, specificity
+hover.
+
 ### 2026-10-11: milestone 5, Ansible
 
 Added:

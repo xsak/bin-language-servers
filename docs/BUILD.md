@@ -68,6 +68,15 @@ docker buildx build --target export --build-arg VERSION=v0.1.0 --output type=loc
 podman build --target export --build-arg TARGETARCH=arm64 --output type=local,dest=dist-arm64 .
 ```
 
+## Embedded data
+
+`internal/webdata` contains the HTML/CSS reference data (gzipped JSON from microsoft/vscode-custom-data,
+MIT). The files are committed, so builds stay offline. To refresh them (downloads in the container):
+
+```bash
+scripts/go.sh generate ./internal/webdata/
+```
+
 ## Version
 
 `make` uses `git describe --tags --always --dirty` and passes it with

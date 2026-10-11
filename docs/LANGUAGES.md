@@ -238,6 +238,36 @@ Same names as ansible-language-server (section `ansible`); YAML settings (`yaml.
 }
 ```
 
+## CSS (`css`)
+
+Status: **available** (milestone 6). Data: MDN-derived reference data from microsoft/vscode-custom-data,
+embedded in the binary (888 properties with values, syntax, browser support and MDN links; at-rules;
+pseudo-classes and pseudo-elements).
+
+| Feature     | Details                                                                                  |
+|-------------|------------------------------------------------------------------------------------------|
+| Diagnostics | Syntax errors (unclosed blocks/comments, missing `:` or values, stray `}`); unknown properties (vendor prefixes, custom properties and descriptors in `@font-face`/`@page`/… are allowed); invalid keyword for keyword-only properties (`display: flexx`); unknown at-rules and pseudo-selectors; obsolete properties (hint) |
+| Completion  | Properties (by relevance, `name: $0;`), values (keywords, functions, named colors for color properties, global keywords, `var()`), custom properties inside `var(`, pseudo-classes after `:`, pseudo-elements after `::`, at-rules after `@`, class/id names used elsewhere in the sheet after `.`/`#`, element names in selectors |
+| Hover       | Property/value/at-rule/pseudo-selector documentation with syntax, browser versions and MDN link; **selector specificity** for the selector under the cursor |
+| Outline     | Rules (nested), at-rules, custom properties                                              |
+| Formatting  | One declaration per line, one selector of a list per line, blank line between top-level rules; comments kept (trailing ones stay on their line); values/selectors only whitespace-normalized (strings untouched); broken sheets aren't touched |
+
+CSS nesting is parsed. SCSS/Less are not supported.
+
+## HTML (`html`)
+
+Status: **available** (milestone 6), same embedded data.
+
+| Feature        | Details                                                                                |
+|----------------|----------------------------------------------------------------------------------------|
+| Diagnostics    | Unclosed elements and stray end tags (implied end tags like `<li>`, `<p>`, `<td>` and void elements are understood); duplicate attributes; duplicate ids; unknown elements (custom elements with `-` and SVG/MathML content are allowed); `<img>` without `alt` (info); CSS problems inside `<style>` and `style=""` |
+| Completion     | Elements after `<` (inserts `div>…</div>`), close tag after `</`, attributes (element-specific and global, `name="…"`), attribute values (e.g. `type` of `<input>`), character references after `&`; CSS inside `<style>` and `style=""` |
+| Hover          | Element and attribute documentation with MDN links; CSS hover inside `<style>` / `style=""` |
+| Outline        | Element tree named like `div#main.card.big`; CSS rules inside `<style>`                |
+| Linked editing | Renaming a start tag renames its end tag (`textDocument/linkedEditingRange`)           |
+
+No formatting yet. Script content is ignored.
+
 ## Schema download and cache
 
 - Downloaded schemas and the SchemaStore catalog are cached in `~/.cache/bls/schemas/` (shared by all

@@ -85,6 +85,11 @@ type CodeActioner interface {
 	CodeActions(ctx context.Context, doc *document.Doc, rng protocol.Range, diags []protocol.Diagnostic) ([]protocol.CodeAction, error)
 }
 
+// LinkedEditor returns ranges that are renamed together (textDocument/linkedEditingRange).
+type LinkedEditor interface {
+	LinkedEditingRanges(ctx context.Context, doc *document.Doc, pos protocol.Position) (*protocol.LinkedEditingRanges, error)
+}
+
 // Configurable receives workspace/didChangeConfiguration settings (the raw "settings" object).
 type Configurable interface {
 	Configure(settings json.RawMessage) error

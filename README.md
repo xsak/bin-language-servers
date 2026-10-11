@@ -4,11 +4,13 @@
 [Zed](https://zed.dev) editor (and any other LSP client), so that **no Node.js / npm / npx** is
 needed on the machine.
 
-> Status: **JSON, YAML, Bash, Dockerfile, Compose and Ansible are available** (milestones 1–5). JSON/YAML: JSON Schema
+> Status: **all planned languages are available** (milestones 1–6): JSON, YAML, Bash, Dockerfile, Compose,
+> Ansible, HTML and CSS. JSON/YAML: JSON Schema
 > validation, completion, hover, outline, SchemaStore and Kubernetes. Bash: shellcheck with quick fixes, shfmt
 > formatting, navigation. Dockerfile/Compose: checks, completion, navigation between stages, services, networks
 > and volumes. Ansible: module/option completion, hover and checks from the installed modules, navigation,
-> ansible-lint. Next: HTML + CSS.
+> ansible-lint. HTML/CSS: checks, completion and hover from MDN data, embedded CSS. Next: `bls doctor`,
+> releases and a VS Code extension.
 > See [docs/DESIGN.md](docs/DESIGN.md#milestones).
 
 ## Languages
@@ -22,8 +24,8 @@ needed on the machine.
 | Compose      | `bls compose` | `docker-compose-langserver`              | ✅ available |
 | Both above   | `bls docker`  | one server for Dockerfile + Compose (Zed/Gram `docker-language-server`) | ✅ available |
 | Ansible      | `bls ansible` | `ansible-language-server`                | ✅ available |
-| HTML         | `bls html`    | `vscode-html-language-server`            | planned  |
-| CSS          | `bls css`     | `vscode-css-language-server`             | planned  |
+| HTML         | `bls html`    | `vscode-html-language-server`            | ✅ available |
+| CSS          | `bls css`     | `vscode-css-language-server`             | ✅ available |
 
 For Terraform, Helm, SQL, Python and TOML, use the existing non-Node servers (`terraform-ls`, `helm-ls`,
 `sqls`, `ruff` + `ty`, `taplo`). [docs/DESIGN.md](docs/DESIGN.md#non-goals) has the details.
@@ -95,6 +97,14 @@ internal/extproc/   running optional external tools (shellcheck, bash help, what
 langs/json/, langs/yaml/, langs/bash/, langs/dockerfile/, langs/compose/  language modules
 langs/docker/       routes Dockerfiles and Compose files to the right module
 langs/ansible/      Ansible (YAML module + module docs read from installed modules + ansible-lint)
+langs/css/, langs/html/  CSS and HTML (HTML reuses the CSS functions for <style> and style="")
+internal/webdata/   embedded HTML/CSS reference data (vscode-custom-data, MIT)
 langs/all/          build-tag-guarded imports of every language module
 scripts/go.sh       run the Go toolchain in a container
 ```
+
+## Third-party data
+
+`internal/webdata` embeds the HTML and CSS data of
+[microsoft/vscode-custom-data](https://github.com/microsoft/vscode-custom-data) (MIT License, see
+`internal/webdata/LICENSE.vscode-custom-data`). It is plain JSON downloaded by `go generate`; no npm is involved.

@@ -287,6 +287,12 @@ type DefinitionParams struct {
 	TextDocumentPositionParams
 }
 
+// LinkedEditingRanges are ranges edited together (e.g. an HTML start and end tag name).
+type LinkedEditingRanges struct {
+	Ranges      []Range `json:"ranges"`
+	WordPattern string  `json:"wordPattern,omitempty"`
+}
+
 type ReferenceParams struct {
 	TextDocumentPositionParams
 	Context struct {

@@ -192,7 +192,13 @@ that use fragments. The YAML hooks gained a per-document schema function and doc
 - Go-to-definition for roles, `include_tasks` / `import_tasks` and `vars_files`.
 - Detection follows Zed's Ansible language (file globs from its `file_types` setting).
 
-### HTML (`html`) and CSS (`css`)
+### HTML (`html`) and CSS (`css`) ✅ (2026-10-11)
+
+As built (differs from the plan): own small parsers instead of `x/net/html` and `tdewolff/parse` — both need
+exact positions of attributes, values, declarations and comments, which those libraries don't expose, and the
+CSS formatter must keep comments. The CSS package exposes text-and-offset functions (`Check`, `Complete`,
+`Hover`, `Symbols`, `Format`) that the HTML module calls for `<style>` content and `style=""` values. The
+server gained `textDocument/linkedEditingRange`.
 
 - HTML: tolerant tokenizer `golang.org/x/net/html`. CSS: `github.com/tdewolff/parse/v2/css`.
 - Data: Microsoft `vscode-custom-data` (MIT) for elements, attributes, CSS properties and values, and
@@ -247,6 +253,6 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
 3. **Bash** ✅ (2026-10-11).
 4. **Dockerfile + Compose** ✅ (2026-10-11).
 5. **Ansible** ✅ (2026-10-11).
-6. **HTML + CSS**.
+6. **HTML + CSS** ✅ (2026-10-11).
 7. `bls doctor`, release automation, a VS Code client extension (`editors/vscode/`, `.vsix` built in a
    container), a Zed/Gram extension if the binary overrides turn out to be fragile.

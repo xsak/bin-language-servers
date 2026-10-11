@@ -129,6 +129,11 @@ func (s *Server) Handle(ctx context.Context, method string, params json.RawMessa
 		return withDoc(s, params, &p, &p.TextDocument, func(f lang.Referencer, d *document.Doc) (any, error) {
 			return f.References(ctx, d, p.Position, p.Context.IncludeDeclaration)
 		})
+	case "textDocument/linkedEditingRange":
+		var p protocol.TextDocumentPositionParams
+		return withDoc(s, params, &p, &p.TextDocument, func(f lang.LinkedEditor, d *document.Doc) (any, error) {
+			return f.LinkedEditingRanges(ctx, d, p.Position)
+		})
 	case "textDocument/codeAction":
 		var p protocol.CodeActionParams
 		return withDoc(s, params, &p, &p.TextDocument, func(f lang.CodeActioner, d *document.Doc) (any, error) {
@@ -252,6 +257,7 @@ func (s *Server) capabilities(enc string) protocol.ServerCapabilities {
 	_, caps.DocumentSymbolProvider = l.(lang.Symboler)
 	_, caps.DocumentFormattingProvider = l.(lang.Formatter)
 	_, caps.ReferencesProvider = l.(lang.Referencer)
+	_, caps.LinkedEditingRangeProvider = l.(lang.LinkedEditor)
 	if _, ok := l.(lang.CodeActioner); ok {
 		caps.CodeActionProvider = &protocol.CodeActionOptions{CodeActionKinds: []string{protocol.CodeActionQuickFix}}
 	}
