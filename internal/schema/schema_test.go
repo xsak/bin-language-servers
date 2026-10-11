@@ -91,6 +91,22 @@ func TestValidateRanges(t *testing.T) {
 	}
 }
 
+func TestFalseSchemaMessage(t *testing.T) {
+	store, dir := newTestStore(t, map[string]string{"f.json": `{"type": "object",
+		"patternProperties": {"^x-": {}}, "properties": {"a": {}}, "additionalProperties": false,
+		"$defs": {}, "items": false}`})
+	sch := get(t, store, ResolveURL("f.json", dir))
+	probs := sch.Validate(parse(t, `{"a": 1, "x-ok": 2, "b": 3}`))
+	if len(probs) != 1 || probs[0].Message != "Property b is not allowed." {
+		t.Fatalf("problems = %+v", probs)
+	}
+	nested, dir2 := newTestStore(t, map[string]string{"n.json": `{"properties": {"s": {"properties": {"p": false}}}}`})
+	probs = get(t, nested, ResolveURL("n.json", dir2)).Validate(parse(t, `{"s": {"p": 1}}`))
+	if len(probs) != 1 || probs[0].Message != "Property p is not allowed." {
+		t.Fatalf("false subschema = %+v", probs)
+	}
+}
+
 func TestLenientRegexpDoesNotBreakSchema(t *testing.T) {
 	store, dir := newTestStore(t, map[string]string{"s.json": testSchema})
 	sch := get(t, store, ResolveURL("s.json", dir))

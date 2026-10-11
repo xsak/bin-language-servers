@@ -27,9 +27,25 @@ func init() {
 	})
 }
 
-// Server implements the module.
+// Server implements the module. Modules built on YAML (compose, ansible) embed it and set Hooks.
 type Server struct {
 	schemalang.Base
+	Hooks Hooks
+}
+
+// Hooks customize the YAML module for a YAML-based format.
+type Hooks struct {
+	// SchemaURL, if set, is used for every document unless a modeline says otherwise.
+	SchemaURL string
+	// Names returns extra completion names at path (a key position when isKey), e.g. service
+	// names inside depends_on. lines is the document text split into lines; ln is the cursor
+	// line.
+	Names func(path tree.Path, isKey bool, lines []string, ln int) []Name
+}
+
+// Name is an extra completion candidate from a hook.
+type Name struct {
+	Label, Detail string
 }
 
 func (s *Server) Name() string { return "yaml" }
@@ -43,11 +59,19 @@ func (s *Server) TriggerCharacters() []string { return []string{":", " ", "-"} }
 // modelineRe matches "# yaml-language-server: $schema=<url>".
 var modelineRe = regexp.MustCompile(`(?m)^\s*#\s*yaml-language-server:\s*\$schema=(\S+)`)
 
+// SchemaFor is schemaFor for embedding modules.
+func (s *Server) SchemaFor(ctx context.Context, doc *document.Doc, root *tree.Node, wait time.Duration) *schema.Schema {
+	return s.schemaFor(ctx, doc, root, wait)
+}
+
 // schemaFor returns the schema for one document of the stream. Order: modeline, settings
 // associations, Kubernetes (apiVersion + kind), SchemaStore catalog.
 func (s *Server) schemaFor(ctx context.Context, doc *document.Doc, root *tree.Node, wait time.Duration) *schema.Schema {
 	if m := modelineRe.FindStringSubmatch(doc.Text); m != nil {
 		return s.Load(ctx, schemalang.ResolveRef(doc, m[1]), wait)
+	}
+	if s.Hooks.SchemaURL != "" {
+		return s.Load(ctx, s.Hooks.SchemaURL, wait)
 	}
 	set := s.Settings()
 	path := doc.Path()

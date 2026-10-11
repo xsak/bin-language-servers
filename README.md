@@ -4,9 +4,10 @@
 [Zed](https://zed.dev) editor (and any other LSP client), so that **no Node.js / npm / npx** is
 needed on the machine.
 
-> Status: **JSON, YAML and Bash are available** (milestones 1–3). JSON/YAML: JSON Schema validation, completion,
-> hover, outline, SchemaStore and Kubernetes. Bash: shellcheck with quick fixes, shfmt formatting, navigation.
-> Next: Dockerfile + Compose, then Ansible, HTML + CSS.
+> Status: **JSON, YAML, Bash, Dockerfile and Compose are available** (milestones 1–4). JSON/YAML: JSON Schema
+> validation, completion, hover, outline, SchemaStore and Kubernetes. Bash: shellcheck with quick fixes, shfmt
+> formatting, navigation. Dockerfile/Compose: checks, completion, navigation between stages, services, networks
+> and volumes. Next: Ansible, then HTML + CSS.
 > See [docs/DESIGN.md](docs/DESIGN.md#milestones).
 
 ## Languages
@@ -16,8 +17,9 @@ needed on the machine.
 | JSON / JSONC | `bls json`    | `vscode-json-language-server`            | ✅ available |
 | YAML (+k8s)  | `bls yaml`    | `yaml-language-server`                   | ✅ available |
 | Bash         | `bls bash`    | `bash-language-server`                   | ✅ available |
-| Dockerfile   | `bls dockerfile` | `dockerfile-language-server-nodejs`   | planned  |
-| Compose      | `bls compose` | `docker-compose-langserver`              | planned  |
+| Dockerfile   | `bls dockerfile` | `dockerfile-language-server-nodejs`   | ✅ available |
+| Compose      | `bls compose` | `docker-compose-langserver`              | ✅ available |
+| Both above   | `bls docker`  | one server for Dockerfile + Compose (Zed/Gram `docker-language-server`) | ✅ available |
 | Ansible      | `bls ansible` | `ansible-language-server`                | planned  |
 | HTML         | `bls html`    | `vscode-html-language-server`            | planned  |
 | CSS          | `bls css`     | `vscode-css-language-server`             | planned  |
@@ -89,7 +91,8 @@ internal/yamlast/   YAML (multi-document) to tree, via goccy/go-yaml
 internal/schema/    JSON Schema store/cache, SchemaStore catalog, validation, completion/hover data
 internal/schemalang/ shared code of the schema-driven modules
 internal/extproc/   running optional external tools (shellcheck, bash help, whatis)
-langs/json/, langs/yaml/, langs/bash/  language modules
+langs/json/, langs/yaml/, langs/bash/, langs/dockerfile/, langs/compose/  language modules
+langs/docker/       routes Dockerfiles and Compose files to the right module
 langs/all/          build-tag-guarded imports of every language module
 scripts/go.sh       run the Go toolchain in a container
 ```

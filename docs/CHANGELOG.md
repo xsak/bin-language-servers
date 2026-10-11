@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### 2026-10-11: milestone 4, Dockerfile + Compose
+
+Added:
+
+- `bls dockerfile`: own parser (continuations, escape directive, heredocs, JSON form), built-in checks,
+  optional hadolint, completion (instructions, flags, `--from` stages, `--mount` options, variables), hover,
+  definition/references for stages and variables, outline, keyword formatting.
+- `bls compose`: YAML module + Compose spec schema + reference checks (services, networks, volumes, secrets,
+  configs), name completion, definition, references, service hover.
+- `bls docker`: one server for both, routing by language id / file name.
+- YAML module `Hooks` (schema URL, extra completion names) and `yaml.SectionKeys`.
+- Schema validation: a `false` subschema on a property now reads "Property X is not allowed."
+
+Checked live with the built binary: Compose schema downloaded and applied, undefined service reported,
+Dockerfile checks and hovers.
+
 ### 2026-10-11: milestone 3, Bash
 
 Added:

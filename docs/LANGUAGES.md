@@ -151,6 +151,54 @@ Same names as bash-language-server (`bashIde`), so existing configurations keep 
 shellcheck runs from the script's directory with `--external-sources --source-path=SCRIPTDIR`, so
 `source ./lib.sh` is followed.
 
+## Dockerfile (`dockerfile`)
+
+Status: **available** (milestone 4).
+
+| Feature          | Details                                                                           |
+|------------------|-----------------------------------------------------------------------------------|
+| Diagnostics      | Unknown instruction; first instruction not FROM; missing arguments; duplicate stage names; invalid JSON (exec) form; CMD/ENTRYPOINT in shell form (info); several CMD/ENTRYPOINT/HEALTHCHECK in a stage; MAINTAINER deprecated; relative WORKDIR; unpinned base image (info); `COPY --from=` naming no stage (typo check) |
+| hadolint         | Runs `hadolint` if installed (optional, not Node); findings link to the hadolint / shellcheck wiki |
+| Completion       | Instructions (with snippets) at line start and after ONBUILD; flags per instruction; `--from=` stage names and indexes; `--mount=` types and per-type options; `--network=`; `$`/`${` → ARG/ENV and predefined build args; FROM: earlier stages, `scratch`, `AS`; HEALTHCHECK `CMD`/`NONE`; STOPSIGNAL signals |
+| Hover            | Instruction syntax and description with a link to the reference; flags; stage references; variables (their ARG/ENV lines) |
+| Go to definition | Stage references (`--from`, `FROM <stage>`) and variables                         |
+| References       | Stage names and variables                                                          |
+| Outline          | Global ARGs, then one entry per stage with its instructions                        |
+| Formatting       | Upper-cases instruction keywords and `AS`; nothing is moved                        |
+
+Parsing handles line continuations (including the `# escape=` directive), comment lines inside continuations,
+heredocs (`RUN <<EOF`) and JSON form.
+
+Settings (section `docker`):
+
+```jsonc
+{ "docker": { "hadolintPath": "hadolint", "hadolintArguments": ["--ignore", "DL3008"] } }
+```
+
+`"hadolintPath": ""` turns hadolint off.
+
+## Docker Compose (`compose`)
+
+Status: **available** (milestone 4).
+
+Everything the YAML module does, with the Compose specification schema
+(`compose-spec/compose-go/master/schema/compose-spec.json`, the one SchemaStore uses) applied to every
+document, plus:
+
+| Feature          | Details                                                                           |
+|------------------|-----------------------------------------------------------------------------------|
+| Reference checks | `depends_on`, `links`, `volumes_from`, `extends` (same file), `network_mode: service:x` → services; `networks` → top-level networks (`default` is implicit); named volumes (`name:/path` and `type: volume`) → top-level volumes; `secrets`, `configs` → top-level definitions |
+| Completion       | Service names in `depends_on` (list and map form), `links`, `volumes_from`, `extends.service`; network, volume, secret and config names; `network_mode` values. Works while the file doesn't parse |
+| Go to definition | From any reference to its definition                                               |
+| References       | From a definition or reference: all uses                                           |
+| Hover            | On a service reference: image, build and container name of the service; otherwise the schema description |
+
+## Dockerfile + Compose in one server (`docker`)
+
+`bls docker` routes each document: language id `dockerfile` or a file name like `Dockerfile`,
+`Containerfile`, `Dockerfile.dev`, `*.dockerfile` → Dockerfile module; everything else → Compose module.
+Use it where an editor attaches one server to both languages (Zed's/Gram's `docker-language-server`).
+
 ## Schema download and cache
 
 - Downloaded schemas and the SchemaStore catalog are cached in `~/.cache/bls/schemas/` (shared by all

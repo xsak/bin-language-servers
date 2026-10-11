@@ -204,7 +204,7 @@ func (s *Server) Complete(ctx context.Context, doc *document.Doc, pos protocol.P
 		root = fallbackRoot(lines, ln)
 	}
 	sch := s.schemaFor(ctx, doc, root, schemalang.FeatureWait)
-	if sch == nil {
+	if sch == nil && s.Hooks.Names == nil {
 		return nil, nil
 	}
 	value := root.ToValue()
@@ -225,7 +225,10 @@ func (s *Server) Complete(ctx context.Context, doc *document.Doc, pos protocol.P
 		}
 		vend := len(strings.TrimRight(stripComment(line[min(vstart, len(line)):]), " ")) + vstart
 		start, end = lineStart+min(vstart, col), lineStart+max(vend, col)
-		items = schemalang.ValueItems(sch.Describe(sch.At(path, value)), renderValue)
+		if sch != nil {
+			items = schemalang.ValueItems(sch.Describe(sch.At(path, value)), renderValue)
+		}
+		items = append(items, s.hookItems(path, false, lines, ln, nil)...)
 	} else {
 		word := before[len(strings.TrimRight(before, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.$/\"'")):]
 		keyCol := col - len(word)
@@ -242,7 +245,10 @@ func (s *Server) Complete(ctx context.Context, doc *document.Doc, pos protocol.P
 		delete(existing, strings.Trim(word+after[:len(after)-len(rest)], `"'`))
 		unit := indentUnit(lines)
 		snippets := s.Env.SnippetSupport
-		props := sch.Properties(path, value)
+		var props []schema.PropertyInfo
+		if sch != nil {
+			props = sch.Properties(path, value)
+		}
 		items = schemalang.PropertyItems(props, existing, func(p schema.PropertyInfo) (string, bool) {
 			if hasColon {
 				return p.Name, false
@@ -252,9 +258,13 @@ func (s *Server) Complete(ctx context.Context, doc *document.Doc, pos protocol.P
 			}
 			return keySnippet(p, keyCol, unit), true
 		})
+		items = append(items, s.hookItems(path, true, lines, ln, existing)...)
 		if len(cur.dashes) > 0 {
 			// "- |": the item may also be a scalar.
-			items = append(items, schemalang.ValueItems(sch.Describe(sch.At(path, value)), renderValue)...)
+			if sch != nil {
+				items = append(items, schemalang.ValueItems(sch.Describe(sch.At(path, value)), renderValue)...)
+			}
+			items = append(items, s.hookItems(path, false, lines, ln, nil)...)
 		}
 	}
 
@@ -264,6 +274,26 @@ func (s *Server) Complete(ctx context.Context, doc *document.Doc, pos protocol.P
 		items[i].InsertTextMode = protocol.InsertTextAsIs
 	}
 	return &protocol.CompletionList{Items: items}, nil
+}
+
+// hookItems asks the embedding module for extra names. Keys get "name: " inserted.
+func (s *Server) hookItems(path tree.Path, isKey bool, lines []string, ln int, existing map[string]bool) []protocol.CompletionItem {
+	if s.Hooks.Names == nil {
+		return nil
+	}
+	var items []protocol.CompletionItem
+	for _, n := range s.Hooks.Names(path, isKey, lines, ln) {
+		if existing[n.Label] {
+			continue
+		}
+		text := n.Label
+		if isKey {
+			text += ": "
+		}
+		items = append(items, protocol.CompletionItem{Label: n.Label, Kind: protocol.CompletionKindValue,
+			Detail: n.Detail, InsertText: text, SortText: "0" + n.Label})
+	}
+	return items
 }
 
 // fallbackRoot builds a minimal root with apiVersion/kind from the raw lines of the current
@@ -364,4 +394,40 @@ func needsQuote(s string) bool {
 		return true
 	}
 	return false
+}
+
+// SectionKeys returns the keys directly under a top-level key (e.g. the service names under
+// "services:"), scanning lines so it also works while the document doesn't parse.
+func SectionKeys(lines []string, section string) []string {
+	var out []string
+	in, col := false, -1
+	for _, l := range lines {
+		li := parseLine(l)
+		if li.docSep {
+			if in {
+				break
+			}
+			continue
+		}
+		if li.blank {
+			continue
+		}
+		if li.keyCol == 0 || (li.indent == 0 && li.keyCol < 0 && len(li.dashes) == 0) {
+			if in {
+				break
+			}
+			in = li.keyCol == 0 && li.key == section
+			continue
+		}
+		if !in || li.keyCol < 0 || len(li.dashes) > 0 {
+			continue
+		}
+		if col < 0 {
+			col = li.keyCol
+		}
+		if li.keyCol == col {
+			out = append(out, li.key)
+		}
+	}
+	return out
 }

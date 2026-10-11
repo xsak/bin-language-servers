@@ -133,6 +133,13 @@ func problemsFor(root *tree.Node, e *jsonschema.ValidationError) []Problem {
 			}
 		}
 		return out
+	case *kind.FalseSchema:
+		// "additionalProperties": false written as a false subschema (e.g. Compose): the key is
+		// the problem, not its value.
+		if holder != nil {
+			return []Problem{{Start: holder.KeyStart, End: holder.KeyEnd,
+				Message: fmt.Sprintf("Property %s is not allowed.", holder.Key)}}
+		}
 	case *kind.Required:
 		start, end := anchor(node, holder)
 		return []Problem{{Start: start, End: end, Message: "Missing property " + joinQuoted(k.Missing) + "."}}

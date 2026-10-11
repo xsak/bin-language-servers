@@ -210,19 +210,20 @@ type CompletionParams struct {
 type CompletionItemKind int
 
 const (
-	CompletionKindText     CompletionItemKind = 1
-	CompletionKindMethod   CompletionItemKind = 2
-	CompletionKindFunction CompletionItemKind = 3
-	CompletionKindField    CompletionItemKind = 5
-	CompletionKindVariable CompletionItemKind = 6
-	CompletionKindModule   CompletionItemKind = 9
-	CompletionKindProperty CompletionItemKind = 10
-	CompletionKindValue    CompletionItemKind = 12
-	CompletionKindEnum     CompletionItemKind = 13
-	CompletionKindKeyword  CompletionItemKind = 14
-	CompletionKindSnippet  CompletionItemKind = 15
-	CompletionKindFile     CompletionItemKind = 17
-	CompletionKindConstant CompletionItemKind = 21
+	CompletionKindText      CompletionItemKind = 1
+	CompletionKindMethod    CompletionItemKind = 2
+	CompletionKindFunction  CompletionItemKind = 3
+	CompletionKindField     CompletionItemKind = 5
+	CompletionKindVariable  CompletionItemKind = 6
+	CompletionKindModule    CompletionItemKind = 9
+	CompletionKindProperty  CompletionItemKind = 10
+	CompletionKindValue     CompletionItemKind = 12
+	CompletionKindEnum      CompletionItemKind = 13
+	CompletionKindKeyword   CompletionItemKind = 14
+	CompletionKindSnippet   CompletionItemKind = 15
+	CompletionKindFile      CompletionItemKind = 17
+	CompletionKindReference CompletionItemKind = 18
+	CompletionKindConstant  CompletionItemKind = 21
 )
 
 type InsertTextFormat int

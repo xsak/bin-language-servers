@@ -109,6 +109,8 @@ Example of a slim build:
 make build TAGS=no_html,no_css,no_ansible
 ```
 
+`langs/docker` imports `langs/dockerfile` and `langs/compose`, so leaving those out also needs `no_docker`.
+
 ## Languages
 
 ### JSON / JSONC (`json`) and YAML (`yaml`)
@@ -156,14 +158,20 @@ text from `help` / `whatis` is cached per process. User documentation: [LANGUAGE
   file and in `source`d files, hover with `help`/man summaries for builtins, completion for variables,
   functions and builtins.
 
-### Dockerfile (`dockerfile`)
+### Dockerfile (`dockerfile`) ✅ (2026-10-11)
+
+As built: an own parser instead of buildkit's (buildkit's parser only reports line numbers and pulls a large
+dependency tree); checks are implemented in `langs/dockerfile`, hadolint is optional. A routing module
+(`bls docker`) serves Dockerfile and Compose from one server because Zed/Gram attach `docker-language-server`
+to both languages. The YAML module got `Hooks` (forced schema URL, extra completion names) for Compose and,
+later, Ansible.
 
 - Parser: `github.com/moby/buildkit/frontend/dockerfile/parser` (the parser Docker itself uses), and
   buildkit lint rules where they can be used as a library.
 - Completion and hover for instructions and flags (`--mount=type=cache`, …), stage names in
   `COPY --from` / `FROM`, `ARG` references; symbols per stage.
 
-### Compose (`compose`)
+### Compose (`compose`) ✅ (2026-10-11)
 
 - Built on the YAML module with the compose-spec schema embedded.
 - Extra checks: unknown `depends_on`, `networks`, `volumes`, `secrets` and `configs` references;
@@ -232,7 +240,7 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
    `lsptest` harness, `bls version|list`, container build.
 2. **JSON + YAML + schema engine** ✅ (2026-10-11). User documentation: [LANGUAGES.md](LANGUAGES.md).
 3. **Bash** ✅ (2026-10-11).
-4. **Dockerfile + Compose**.
+4. **Dockerfile + Compose** ✅ (2026-10-11).
 5. **Ansible**.
 6. **HTML + CSS**.
 7. `bls doctor`, release automation, a VS Code client extension (`editors/vscode/`, `.vsix` built in a

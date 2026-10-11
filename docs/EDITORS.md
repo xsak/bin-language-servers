@@ -37,7 +37,7 @@ need checking the first time you open such a file):
 | CSS             | `vscode-css-language-server`* | `css`          | built in                         |
 | HTML            | `superhtml`                  | `html`          | built in                         |
 | Dockerfile      | `dockerfile-language-server` | `dockerfile`    | `dockerfile` extension (not installed now) |
-| Docker Compose  | `docker-language-server`     | `compose`       | `dockerfile` or `docker-compose` extension |
+| Docker Compose  | `docker-language-server`     | `docker` (routes Dockerfile + Compose) | `dockerfile` or `docker-compose` extension |
 | Ansible         | `ansible-language-server`*   | `ansible`       | `ansible` extension (not installed now) |
 
 Notes:
@@ -49,10 +49,10 @@ Notes:
 - For Ansible, install Gram's `ansible` extension first. It provides the language and the
   `ansible-language-server` name; `bls` replaces its binary.
 
-### Ready now: JSON, YAML and Bash
+### Ready now: JSON, YAML, Bash, Dockerfile and Compose
 
 These work today (`bls list`). Your Gram `settings.jsonc` already has a `json-language-server` entry, so
-extend it and add YAML and Bash:
+extend it and add the others:
 
 ```jsonc
 "lsp": {
@@ -70,9 +70,21 @@ extend it and add YAML and Bash:
   },
   "bash-language-server": {
     "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["bash"] }
+  },
+  // Dockerfile + Compose (dockerfile / docker-compose extensions). docker-language-server is attached to
+  // both languages, so it gets the routing "docker" mode.
+  "docker-language-server": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["docker"] }
+  },
+  "dockerfile-language-server": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["dockerfile"] }
   }
 }
 ```
+
+If both `docker-language-server` and `dockerfile-language-server` run for a Dockerfile, you see every
+Dockerfile diagnostic twice. Keep one, e.g. with
+`"languages": { "Dockerfile": { "language_servers": ["docker-language-server", "!dockerfile-language-server"] } }`.
 
 Settings for these languages (schema associations, shellcheck/shfmt options, Kubernetes version, turning SchemaStore off) are described in
 [LANGUAGES.md](LANGUAGES.md).
@@ -105,7 +117,7 @@ enable the entries whose language `bls list` shows:
       "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["dockerfile"] }
     },
     "docker-language-server": {
-      "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["compose"] }
+      "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["docker"] }
     },
     "ansible-language-server": {
       "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["ansible"] }
@@ -157,7 +169,7 @@ Node-based server has to be either replaced by `bls` or turned off, and Prettier
 | CSS            | `vscode-css-language-server`  | `css`          | built in                        |
 | HTML           | `vscode-html-language-server` | `html`         | `html` extension                |
 | Dockerfile     | `dockerfile-language-server`  | `dockerfile`   | `dockerfile` extension          |
-| Docker Compose | `docker-language-server`      | `compose`      | `docker-compose` extension      |
+| Docker Compose | `docker-language-server`      | `docker`       | `docker-compose` extension      |
 | Ansible        | `ansible-language-server`     | `ansible`      | `ansible` extension             |
 
 ### settings.json
@@ -173,7 +185,7 @@ Merge this into the existing settings (replace `/home/xsak`). Again, only enable
     "vscode-css-language-server":  { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["css"] } },
     "vscode-html-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["html"] } },
     "dockerfile-language-server":  { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["dockerfile"] } },
-    "docker-language-server":      { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["compose"] } },
+    "docker-language-server":      { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["docker"] } },
     "ansible-language-server":     { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["ansible"] } }
   },
 
