@@ -192,12 +192,20 @@ func NewStore(enc string) *Store {
 	return &Store{docs: map[protocol.DocumentURI]*Doc{}, enc: enc}
 }
 
+// SetEncoding changes the position encoding of documents opened from now on. The server calls it
+// once, when the encoding has been negotiated.
+func (s *Store) SetEncoding(enc string) {
+	s.mu.Lock()
+	s.enc = enc
+	s.mu.Unlock()
+}
+
 // Open adds or replaces a document.
 func (s *Store) Open(item protocol.TextDocumentItem) *Doc {
-	d := New(item.URI, item.LanguageID, item.Version, item.Text, s.enc)
 	s.mu.Lock()
+	defer s.mu.Unlock()
+	d := New(item.URI, item.LanguageID, item.Version, item.Text, s.enc)
 	s.docs[item.URI] = d
-	s.mu.Unlock()
 	return d
 }
 

@@ -48,8 +48,8 @@ type Server struct {
 
 	mu           sync.Mutex
 	state        state
-	clientConfig bool // client supports workspace/configuration
-	store        *document.Store
+	clientConfig bool            // client supports workspace/configuration
+	store        *document.Store // never nil
 	timers       map[protocol.DocumentURI]*time.Timer
 
 	diagMu  sync.Mutex
@@ -68,9 +68,12 @@ func New(l lang.Language, opts Options) *Server {
 		opts.OnExit = func(int) {}
 	}
 	return &Server{
-		lang:    l,
-		opts:    opts,
-		log:     opts.Logger.With("lang", l.Name()),
+		lang: l,
+		opts: opts,
+		log:  opts.Logger.With("lang", l.Name()),
+		// The store exists from the start: modules may call RefreshDiagnostics from background
+		// goroutines started in Init, before initialize has finished. initialize sets the encoding.
+		store:   document.NewStore(protocol.PositionEncodingUTF16),
 		timers:  map[protocol.DocumentURI]*time.Timer{},
 		diagGen: map[protocol.DocumentURI]uint64{},
 	}
@@ -221,7 +224,7 @@ func (s *Server) initialize(ctx context.Context, raw json.RawMessage) (any, erro
 	}
 
 	s.mu.Lock()
-	s.store = document.NewStore(enc)
+	s.store.SetEncoding(enc)
 	s.state = stateRunning
 	s.clientConfig = p.Capabilities.Workspace != nil && p.Capabilities.Workspace.Configuration
 	s.mu.Unlock()

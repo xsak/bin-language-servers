@@ -105,3 +105,30 @@ func TestLifecycleAndFeatures(t *testing.T) {
 		t.Fatalf("after shutdown: got %v", err)
 	}
 }
+
+// earlyRefresh calls back into the server from a goroutine started in Init, like the Ansible
+// module does after indexing: the callback may arrive before initialize has returned.
+type earlyRefresh struct {
+	fake
+	called chan struct{}
+}
+
+func (e *earlyRefresh) Init(ctx context.Context, env lang.Env) error {
+	_ = e.fake.Init(ctx, env)
+	go func() {
+		env.Client.RefreshDiagnostics()
+		env.Client.LogMessage(protocol.MessageInfo, "indexed")
+		close(e.called)
+	}()
+	return nil
+}
+
+func TestCallbackDuringInit(t *testing.T) {
+	e := &earlyRefresh{called: make(chan struct{})}
+	c := lsptest.Start(t, e)
+	c.Initialize("file:///work/proj")
+	<-e.called
+	// The server must still be fully usable and honour the negotiated encoding afterwards.
+	uri := c.Open("file:///work/proj/a.txt", "fake", "TODO\n")
+	c.WaitDiagnostics(uri, lsptest.Contains("todo"))
+}

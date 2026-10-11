@@ -14,6 +14,9 @@ Changed:
 - Bash `source` navigation reads regular files of at most 4 MiB only (no FIFOs, devices, huge files).
 - nginx/Apache include navigation lists regular files only.
 - GitHub Actions: `actions/checkout` pinned to a commit (v6.1.0).
+- The document store is created when the server is, not in `initialize`. A module that calls
+  `RefreshDiagnostics` from a goroutine started in `Init` (Ansible does) could hit a nil store and
+  crash the process; `Store.SetEncoding` applies the negotiated encoding instead.
 
 Fixed (found by the new fuzz tests):
 
