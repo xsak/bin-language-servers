@@ -6,4 +6,6 @@ require (
 	github.com/goccy/go-yaml v1.19.2
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	golang.org/x/text v0.43.0
+	mvdan.cc/editorconfig v0.3.0
+	mvdan.cc/sh/v3 v3.14.1
 )

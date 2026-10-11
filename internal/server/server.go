@@ -124,6 +124,16 @@ func (s *Server) Handle(ctx context.Context, method string, params json.RawMessa
 		return withDoc(s, params, &p, &p.TextDocument, func(f lang.Definer, d *document.Doc) (any, error) {
 			return f.Definition(ctx, d, p.Position)
 		})
+	case "textDocument/references":
+		var p protocol.ReferenceParams
+		return withDoc(s, params, &p, &p.TextDocument, func(f lang.Referencer, d *document.Doc) (any, error) {
+			return f.References(ctx, d, p.Position, p.Context.IncludeDeclaration)
+		})
+	case "textDocument/codeAction":
+		var p protocol.CodeActionParams
+		return withDoc(s, params, &p, &p.TextDocument, func(f lang.CodeActioner, d *document.Doc) (any, error) {
+			return f.CodeActions(ctx, d, p.Range, p.Context.Diagnostics)
+		})
 	case "textDocument/documentSymbol":
 		var p protocol.DocumentSymbolParams
 		return withDoc(s, params, &p, &p.TextDocument, func(f lang.Symboler, d *document.Doc) (any, error) {
@@ -241,6 +251,10 @@ func (s *Server) capabilities(enc string) protocol.ServerCapabilities {
 	_, caps.DefinitionProvider = l.(lang.Definer)
 	_, caps.DocumentSymbolProvider = l.(lang.Symboler)
 	_, caps.DocumentFormattingProvider = l.(lang.Formatter)
+	_, caps.ReferencesProvider = l.(lang.Referencer)
+	if _, ok := l.(lang.CodeActioner); ok {
+		caps.CodeActionProvider = &protocol.CodeActionOptions{CodeActionKinds: []string{protocol.CodeActionQuickFix}}
+	}
 	return caps
 }
 

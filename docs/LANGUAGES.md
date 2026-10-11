@@ -103,6 +103,54 @@ The format is the same as Red Hat's yaml-language-server, plus a `kubernetes` bl
 If `yaml.schemas.kubernetes` is set, Kubernetes schemas only apply to the matching files, whatever
 `autoDetect` says.
 
+## Bash and other shells (`bash`)
+
+Status: **available** (milestone 3).
+
+| Feature          | Details                                                                           |
+|------------------|-----------------------------------------------------------------------------------|
+| Diagnostics      | Parse errors (mvdan.cc/sh, the parser behind shfmt), then **shellcheck** if it is installed. Each finding links to its wiki page |
+| Quick fixes      | shellcheck's suggested fix (e.g. adding quotes) and "Disable SCxxxx for this line"    |
+| Formatting       | shfmt-compatible: indent from the editor, overridden by `.editorconfig` (`indent_style`, `indent_size`, `binary_next_line`, `switch_case_indent`, `space_redirects`, `keep_padding`, `function_next_line`, `shell_variant`) |
+| Outline          | Functions (with the variables first assigned inside them) and global variables      |
+| Go to definition | Functions and variables, also in `source`d / `.`-included files (up to 3 levels), and from `source file` to the file |
+| References       | Function calls and variable uses in the file                                       |
+| Hover            | Your functions/variables: definition line + the comment above it; builtins and keywords: `help` from bash; commands: `whatis` summary and path |
+| Completion       | `$`/`${` → variables (file, sourced files, environment, shell variables); otherwise functions, keywords (with `if`/`for`/`while`/`case`/`function` snippets), builtins and commands on `PATH` |
+
+The dialect comes from the shebang (`sh`/`dash` → POSIX, `bash`, `ksh`/`mksh`, `zsh`, `bats`), then the
+extension (`.bats`, `.zsh`, `.ksh`); the default is bash. zsh files are parsed but not given to shellcheck
+(it doesn't support zsh).
+
+External tools are optional and none of them needs Node: `shellcheck` (diagnostics), `bash` (`help` text),
+`whatis` (command summaries).
+
+### Settings
+
+Same names as bash-language-server (`bashIde`), so existing configurations keep working:
+
+```jsonc
+{
+  "bashIde": {
+    "shellcheckPath": "shellcheck",          // "" turns shellcheck off
+    "shellcheckArguments": ["--exclude=SC1091"],
+    "shfmt": {
+      "ignoreEditorconfig": false,
+      "languageDialect": "auto",             // auto, bash, posix, mksh, bats, zsh
+      "binaryNextLine": false,
+      "caseIndent": false,
+      "funcNextLine": false,
+      "keepPadding": false,
+      "spaceRedirects": false,
+      "simplifyCode": false
+    }
+  }
+}
+```
+
+shellcheck runs from the script's directory with `--external-sources --source-path=SCRIPTDIR`, so
+`source ./lib.sh` is followed.
+
 ## Schema download and cache
 
 - Downloaded schemas and the SchemaStore catalog are cached in `~/.cache/bls/schemas/` (shared by all

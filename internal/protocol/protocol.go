@@ -134,6 +134,11 @@ type ServerCapabilities struct {
 	DocumentSymbolProvider     bool                     `json:"documentSymbolProvider,omitempty"`
 	DocumentFormattingProvider bool                     `json:"documentFormattingProvider,omitempty"`
 	LinkedEditingRangeProvider bool                     `json:"linkedEditingRangeProvider,omitempty"`
+	CodeActionProvider         *CodeActionOptions       `json:"codeActionProvider,omitempty"`
+}
+
+type CodeActionOptions struct {
+	CodeActionKinds []string `json:"codeActionKinds,omitempty"`
 }
 
 // --- document sync ---
@@ -178,11 +183,16 @@ const (
 )
 
 type Diagnostic struct {
-	Range    Range              `json:"range"`
-	Severity DiagnosticSeverity `json:"severity,omitempty"`
-	Code     any                `json:"code,omitempty"`
-	Source   string             `json:"source,omitempty"`
-	Message  string             `json:"message"`
+	Range           Range              `json:"range"`
+	Severity        DiagnosticSeverity `json:"severity,omitempty"`
+	Code            any                `json:"code,omitempty"`
+	CodeDescription *CodeDescription   `json:"codeDescription,omitempty"`
+	Source          string             `json:"source,omitempty"`
+	Message         string             `json:"message"`
+}
+
+type CodeDescription struct {
+	Href string `json:"href"`
 }
 
 type PublishDiagnosticsParams struct {
@@ -274,6 +284,38 @@ type Hover struct {
 
 type DefinitionParams struct {
 	TextDocumentPositionParams
+}
+
+type ReferenceParams struct {
+	TextDocumentPositionParams
+	Context struct {
+		IncludeDeclaration bool `json:"includeDeclaration"`
+	} `json:"context"`
+}
+
+// Code action kinds.
+const (
+	CodeActionQuickFix = "quickfix"
+)
+
+type CodeActionParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Range        Range                  `json:"range"`
+	Context      struct {
+		Diagnostics []Diagnostic `json:"diagnostics"`
+	} `json:"context"`
+}
+
+type WorkspaceEdit struct {
+	Changes map[DocumentURI][]TextEdit `json:"changes"`
+}
+
+type CodeAction struct {
+	Title       string         `json:"title"`
+	Kind        string         `json:"kind,omitempty"`
+	Diagnostics []Diagnostic   `json:"diagnostics,omitempty"`
+	IsPreferred bool           `json:"isPreferred,omitempty"`
+	Edit        *WorkspaceEdit `json:"edit,omitempty"`
 }
 
 type DocumentSymbolParams struct {

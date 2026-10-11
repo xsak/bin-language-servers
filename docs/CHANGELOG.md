@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### 2026-10-11: milestone 3, Bash
+
+Added:
+
+- `bls bash`: parse errors (mvdan.cc/sh), shellcheck diagnostics with wiki links, quick fixes (shellcheck fix,
+  disable directive), shfmt-compatible formatting with `.editorconfig`, outline, go-to-definition and
+  references (including `source`d files), hover (comments, `help`, `whatis`), completion (variables,
+  functions, keywords with snippets, builtins, `PATH` commands). Settings: `bashIde` (bash-language-server
+  names).
+- Protocol/server: `textDocument/references`, `textDocument/codeAction`, `codeDescription` on diagnostics.
+- `internal/extproc` for optional external tools.
+
+Checked live with the built binary, real shellcheck 0.9.0, bash `help` and `whatis`.
+
 ### 2026-10-11: milestone 2, JSON + YAML
 
 Added:

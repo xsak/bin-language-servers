@@ -75,6 +75,16 @@ type Definer interface {
 	Definition(ctx context.Context, doc *document.Doc, pos protocol.Position) ([]protocol.Location, error)
 }
 
+// Referencer finds every use of the symbol at a position.
+type Referencer interface {
+	References(ctx context.Context, doc *document.Doc, pos protocol.Position, includeDecl bool) ([]protocol.Location, error)
+}
+
+// CodeActioner offers quick fixes for a range (diagnostics are the ones the client shows there).
+type CodeActioner interface {
+	CodeActions(ctx context.Context, doc *document.Doc, rng protocol.Range, diags []protocol.Diagnostic) ([]protocol.CodeAction, error)
+}
+
 // Configurable receives workspace/didChangeConfiguration settings (the raw "settings" object).
 type Configurable interface {
 	Configure(settings json.RawMessage) error

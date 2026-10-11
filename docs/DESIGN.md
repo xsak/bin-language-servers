@@ -142,7 +142,11 @@ Implementation notes (as built):
 - The server pulls settings with `workspace/configuration` after `initialized` (Zed/Gram answer from
   `lsp.<server>.settings`), and also accepts pushed `workspace/didChangeConfiguration`.
 
-### Bash (`bash`)
+### Bash (`bash`) ✅ (2026-10-11)
+
+As built: strict parse for the error message, then a recovering parse (`RecoverErrors`) so symbols survive a
+half-typed script; shellcheck results are cached per document version and reused for code actions; hover
+text from `help` / `whatis` is cached per process. User documentation: [LANGUAGES.md](LANGUAGES.md).
 
 - Parser and formatter: `mvdan.cc/sh/v3` (`syntax` package; formatting reads `.editorconfig` like
   `shfmt` does).
@@ -227,7 +231,7 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
 1. **Core** ✅ (2026-10-11): jsonrpc, protocol, server, document store with UTF-8/16/32 mapping,
    `lsptest` harness, `bls version|list`, container build.
 2. **JSON + YAML + schema engine** ✅ (2026-10-11). User documentation: [LANGUAGES.md](LANGUAGES.md).
-3. **Bash**.
+3. **Bash** ✅ (2026-10-11).
 4. **Dockerfile + Compose**.
 5. **Ansible**.
 6. **HTML + CSS**.
