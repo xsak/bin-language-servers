@@ -4,6 +4,10 @@
 [Zed](https://zed.dev) editor (and any other LSP client), so that **no Node.js / npm / npx** is
 needed on the machine.
 
+> [!NOTE]  
+> This is a vibe coded codebase! Though I tried to make it as good as possible it may contain errors.
+> Any suggestions are welcome!
+
 > Status: **13 languages available**: JSON, YAML, Bash, Dockerfile, Compose, Ansible, HTML, CSS, TOML,
 > INI (incl. systemd units and podman Quadlet), nginx and Apache httpd config. JSON/YAML: JSON Schema
 > validation, completion, hover, outline, SchemaStore and Kubernetes. Bash: shellcheck with quick fixes, shfmt
