@@ -5,8 +5,8 @@
 needed on the machine.
 
 > [!NOTE]  
-> This is a vibe coded codebase! Though I tried to make it as good as possible it may contain errors.
-> Any suggestions are welcome!
+> This is a vibe-coded codebase. I tried to make it as solid as possible, but it may still contain errors.
+> Suggestions are very welcome.
 
 > Status: **13 languages available**: JSON, YAML, Bash, Dockerfile, Compose, Ansible, HTML, CSS, TOML,
 > INI (incl. systemd units and podman Quadlet), nginx and Apache httpd config. JSON/YAML: JSON Schema
