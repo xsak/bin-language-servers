@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### 2026-10-11: milestone 2, JSON + YAML
+
+Added:
+
+- `bls json`: JSON/JSONC diagnostics (tolerant parser), JSON Schema validation, completion (keys with
+  snippets, values), hover, outline, comment-preserving formatting.
+- `bls yaml`: multi-document YAML with anchors/aliases/merge keys, per-document schema validation, indentation
+  based completion (works on invalid documents), hover, outline (one entry per document).
+- Schema association: `$schema` / YAML modeline, `json.schemas` / `yaml.schemas` settings (VS Code and Red Hat
+  formats, inline schemas), Kubernetes by `apiVersion`/`kind` (yannh/kubernetes-json-schema, strict),
+  SchemaStore catalog.
+- Schema store: background loading, disk cache in `~/.cache/bls/schemas` (24 h TTL, stale copy when offline),
+  YAML schemas, lenient regexps, `BLS_OFFLINE`, `BLS_SCHEMA_CATALOG`.
+- Server: settings are pulled with `workspace/configuration`; `insertTextMode` support.
+- Docs: `docs/LANGUAGES.md`.
+
+Checked against the live SchemaStore and Kubernetes schemas with the built binary over stdio (GitHub workflow,
+Kubernetes Deployment, `package.json`).
+
 ### 2026-10-11: editor docs
 
 - `docs/EDITORS.md`: Gram 3.3.0 setup (server names from its log, `settings.jsonc` snippet, checks),

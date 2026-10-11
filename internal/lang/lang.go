@@ -80,6 +80,13 @@ type Configurable interface {
 	Configure(settings json.RawMessage) error
 }
 
+// ConfigSectioner lets a Configurable module name the settings sections ("json", "yaml") the
+// server requests with workspace/configuration after initialization. The answers are passed to
+// Configure as one object: {"json": {...}}.
+type ConfigSectioner interface {
+	ConfigSections() []string
+}
+
 // SaveListener is notified on textDocument/didSave, e.g. to run slower external linters.
 type SaveListener interface {
 	DidSave(ctx context.Context, doc *document.Doc)

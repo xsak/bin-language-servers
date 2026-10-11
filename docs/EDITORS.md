@@ -49,7 +49,32 @@ Notes:
 - For Ansible, install Gram's `ansible` extension first. It provides the language and the
   `ansible-language-server` name; `bls` replaces its binary.
 
-### settings.jsonc
+### Ready now: JSON and YAML
+
+These two work today (`bls list`). Your Gram `settings.jsonc` already has a `json-language-server` entry, so
+extend it and add YAML:
+
+```jsonc
+"lsp": {
+  "json-language-server": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["json"] },
+    "enable_lsp_tasks": true
+  },
+  "yaml-language-server": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["yaml"] },
+    "settings": {
+      "yaml": {
+        "schemas": { "kubernetes": ["k8s/**/*.yaml"] }   // optional, see LANGUAGES.md
+      }
+    }
+  }
+}
+```
+
+Settings for both languages (schema associations, Kubernetes version, turning SchemaStore off) are described in
+[LANGUAGES.md](LANGUAGES.md).
+
+### settings.jsonc (all languages)
 
 Merge this into the existing `"lsp"` block (replace `/home/xsak` with your home directory). Only
 enable the entries whose language `bls list` shows:

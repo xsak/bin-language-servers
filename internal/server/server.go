@@ -46,10 +46,11 @@ type Server struct {
 	log  *slog.Logger
 	conn *jsonrpc.Conn
 
-	mu     sync.Mutex
-	state  state
-	store  *document.Store
-	timers map[protocol.DocumentURI]*time.Timer
+	mu           sync.Mutex
+	state        state
+	clientConfig bool // client supports workspace/configuration
+	store        *document.Store
+	timers       map[protocol.DocumentURI]*time.Timer
 
 	diagMu  sync.Mutex
 	diagGen map[protocol.DocumentURI]uint64 // drops results from superseded runs
@@ -207,6 +208,7 @@ func (s *Server) initialize(ctx context.Context, raw json.RawMessage) (any, erro
 	s.mu.Lock()
 	s.store = document.NewStore(enc)
 	s.state = stateRunning
+	s.clientConfig = p.Capabilities.Workspace != nil && p.Capabilities.Workspace.Configuration
 	s.mu.Unlock()
 
 	if p.ClientInfo != nil {
@@ -263,6 +265,7 @@ func (s *Server) Notify(ctx context.Context, method string, params json.RawMessa
 
 	switch method {
 	case "initialized":
+		go s.pullConfiguration(ctx)
 	case "textDocument/didOpen":
 		var p protocol.DidOpenTextDocumentParams
 		if s.decode(method, params, &p) {
@@ -307,6 +310,11 @@ func (s *Server) Notify(ctx context.Context, method string, params json.RawMessa
 	case "workspace/didChangeConfiguration":
 		var p protocol.DidChangeConfigurationParams
 		if s.decode(method, params, &p) {
+			if len(p.Settings) == 0 || string(p.Settings) == "null" || string(p.Settings) == "{}" {
+				// Pull-model clients send an empty notification as a hint to re-request.
+				go s.pullConfiguration(ctx)
+				return
+			}
 			if c, ok := s.lang.(lang.Configurable); ok {
 				if err := c.Configure(p.Settings); err != nil {
 					s.log.Warn("configure", "err", err)
@@ -317,6 +325,46 @@ func (s *Server) Notify(ctx context.Context, method string, params json.RawMessa
 	default:
 		s.log.Debug("ignored notification", "method", method)
 	}
+}
+
+// pullConfiguration asks the client for the module's settings sections. It runs on its own
+// goroutine because the response arrives through the same read loop that delivers this
+// notification.
+func (s *Server) pullConfiguration(ctx context.Context) {
+	c, ok := s.lang.(lang.Configurable)
+	cs, ok2 := s.lang.(lang.ConfigSectioner)
+	s.mu.Lock()
+	supported := s.clientConfig
+	s.mu.Unlock()
+	if !ok || !ok2 || !supported {
+		return
+	}
+	sections := cs.ConfigSections()
+	items := make([]map[string]string, len(sections))
+	for i, sec := range sections {
+		items[i] = map[string]string{"section": sec}
+	}
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	var result []json.RawMessage
+	if err := s.conn.Call(ctx, "workspace/configuration", map[string]any{"items": items}, &result); err != nil {
+		s.log.Warn("workspace/configuration", "err", err)
+		return
+	}
+	merged := map[string]json.RawMessage{}
+	for i, sec := range sections {
+		if i < len(result) && len(result[i]) > 0 && string(result[i]) != "null" {
+			merged[sec] = result[i]
+		}
+	}
+	if len(merged) == 0 {
+		return
+	}
+	raw, _ := json.Marshal(merged)
+	if err := c.Configure(raw); err != nil {
+		s.log.Warn("configure", "err", err)
+	}
+	s.refreshDiagnostics()
 }
 
 func (s *Server) decode(method string, raw json.RawMessage, v any) bool {

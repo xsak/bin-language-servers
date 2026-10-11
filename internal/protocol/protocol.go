@@ -222,6 +222,14 @@ const (
 	InsertTextSnippet InsertTextFormat = 2
 )
 
+// InsertTextMode says whether the client re-indents multi-line insertions.
+type InsertTextMode int
+
+const (
+	InsertTextAsIs              InsertTextMode = 1
+	InsertTextAdjustIndentation InsertTextMode = 2
+)
+
 type TextEdit struct {
 	Range   Range  `json:"range"`
 	NewText string `json:"newText"`
@@ -236,6 +244,7 @@ type CompletionItem struct {
 	FilterText       string             `json:"filterText,omitempty"`
 	InsertText       string             `json:"insertText,omitempty"`
 	InsertTextFormat InsertTextFormat   `json:"insertTextFormat,omitempty"`
+	InsertTextMode   InsertTextMode     `json:"insertTextMode,omitempty"`
 	TextEdit         *TextEdit          `json:"textEdit,omitempty"`
 }
 

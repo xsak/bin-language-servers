@@ -50,9 +50,11 @@ internal/jsonrpc/        JSON-RPC 2.0 over stdio (Content-Length framing), cance
 internal/protocol/       LSP 3.17 types (hand-written subset that we actually use)
 internal/server/         lifecycle, capability negotiation, request routing, workers
 internal/document/       open-document store, incremental sync, UTF-8 <-> UTF-16 positions
-internal/schema/         JSON Schema engine: catalog, fetch/cache, validate, completion, hover
-internal/jsonast/        error-tolerant JSON(C) parser with byte ranges
-internal/yamlast/        YAML AST with ranges (multi-document), path <-> range mapping
+internal/tree/           format-neutral value tree (object/array/scalars) with byte ranges
+internal/schema/         JSON Schema engine: store + disk cache, catalog, globs, settings, validation, navigation
+internal/schemalang/     shared base of schema-driven modules (settings, schema lookup, outline, items)
+internal/jsonast/        error-tolerant JSON(C) parser with byte ranges, comment-preserving formatter
+internal/yamlast/        YAML (multi-document) to tree, anchors/aliases/merge keys resolved
 internal/extproc/        running optional external tools (shellcheck, ansible-lint) with timeouts
 internal/lang/           Language interface, optional feature interfaces, module registry
 internal/lsptest/        in-process LSP client used by tests
@@ -123,6 +125,22 @@ Both run on the shared `internal/schema` engine:
 - YAML-only: multi-document support, anchors/aliases, duplicate-key and syntax diagnostics.
 - Dependencies: `github.com/santhosh-tekuri/jsonschema/v6` (validation, drafts 4 to 2020-12);
   `github.com/goccy/go-yaml` for the YAML AST (it tolerates errors and keeps positions).
+
+Implementation notes (as built):
+
+- Both formats are converted to `internal/tree` (values with byte ranges). Validation converts the tree to
+  plain Go values, runs `santhosh-tekuri/jsonschema/v6` and maps each error's instance location back to a
+  range. For `anyOf`/`oneOf` only the branch that got furthest into the document is reported; if all branches
+  failed on the type, one "Expected one of …" message is produced.
+- Completion and hover walk the compiled schema (`$ref`, `allOf`, `anyOf`/`oneOf` filtered by the current
+  value, `if`/`then`/`else`); `markdownDescription` and `enumDescriptions` are read from the raw schema
+  document because the validator doesn't keep them.
+- YAML completion doesn't use the parse tree: it derives the path from indentation and `- ` markers, so it works
+  on half-typed documents. Hover and diagnostics use the tree.
+- Schemas load asynchronously (`schema.Store`); a finished load triggers `RefreshDiagnostics`. Failed downloads
+  are retried after a minute; 404s are remembered.
+- The server pulls settings with `workspace/configuration` after `initialized` (Zed/Gram answer from
+  `lsp.<server>.settings`), and also accepts pushed `workspace/didChangeConfiguration`.
 
 ### Bash (`bash`)
 
@@ -208,8 +226,7 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
 
 1. **Core** ✅ (2026-10-11): jsonrpc, protocol, server, document store with UTF-8/16/32 mapping,
    `lsptest` harness, `bls version|list`, container build.
-2. **JSON + YAML + schema engine** (largest share of the work; Compose, Ansible and Kubernetes build
-   on it).
+2. **JSON + YAML + schema engine** ✅ (2026-10-11). User documentation: [LANGUAGES.md](LANGUAGES.md).
 3. **Bash**.
 4. **Dockerfile + Compose**.
 5. **Ansible**.

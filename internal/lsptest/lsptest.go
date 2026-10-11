@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -22,9 +23,10 @@ type Client struct {
 	conn *jsonrpc.Conn
 	ctx  context.Context
 
-	mu    sync.Mutex
-	diags map[protocol.DocumentURI][]chan protocol.PublishDiagnosticsParams
-	last  map[protocol.DocumentURI]protocol.PublishDiagnosticsParams
+	mu       sync.Mutex
+	diags    map[protocol.DocumentURI][]chan protocol.PublishDiagnosticsParams
+	last     map[protocol.DocumentURI]protocol.PublishDiagnosticsParams
+	versions map[protocol.DocumentURI]int32
 }
 
 // Start launches l and returns a client that is not yet initialized.
@@ -45,9 +47,10 @@ func Start(t testing.TB, l lang.Language) *Client {
 
 	c := &Client{
 		t: t, ctx: ctx,
-		conn:  jsonrpc.NewConn(cliIn, cliOut),
-		diags: map[protocol.DocumentURI][]chan protocol.PublishDiagnosticsParams{},
-		last:  map[protocol.DocumentURI]protocol.PublishDiagnosticsParams{},
+		conn:     jsonrpc.NewConn(cliIn, cliOut),
+		diags:    map[protocol.DocumentURI][]chan protocol.PublishDiagnosticsParams{},
+		last:     map[protocol.DocumentURI]protocol.PublishDiagnosticsParams{},
+		versions: map[protocol.DocumentURI]int32{},
 	}
 	cliDone := make(chan struct{})
 	go func() {
@@ -113,10 +116,65 @@ func (c *Client) Notify(method string, params any) {
 
 // Open sends didOpen and returns the URI.
 func (c *Client) Open(uri protocol.DocumentURI, languageID, text string) protocol.DocumentURI {
+	c.mu.Lock()
+	c.versions[uri] = 1
+	c.mu.Unlock()
 	c.Notify("textDocument/didOpen", protocol.DidOpenTextDocumentParams{
 		TextDocument: protocol.TextDocumentItem{URI: uri, LanguageID: languageID, Version: 1, Text: text},
 	})
 	return uri
+}
+
+// Replace sends a full-text didChange and returns the new version.
+func (c *Client) Replace(uri protocol.DocumentURI, text string) int32 {
+	c.mu.Lock()
+	c.versions[uri]++
+	v := c.versions[uri]
+	c.mu.Unlock()
+	c.Notify("textDocument/didChange", protocol.DidChangeTextDocumentParams{
+		TextDocument:   protocol.VersionedTextDocumentIdentifier{URI: uri, Version: v},
+		ContentChanges: []protocol.TextDocumentContentChangeEvent{{Text: text}},
+	})
+	return v
+}
+
+// WaitDiagnostics returns the first diagnostics for uri that satisfy ok. Schemas load in the
+// background, so it nudges the server with no-op edits until ok holds or it gives up.
+func (c *Client) WaitDiagnostics(uri protocol.DocumentURI, ok func([]protocol.Diagnostic) bool) []protocol.Diagnostic {
+	c.t.Helper()
+	var diags []protocol.Diagnostic
+	for i := 0; i < 100; i++ {
+		c.mu.Lock()
+		v := c.versions[uri]
+		c.mu.Unlock()
+		diags = c.Diagnostics(uri, v)
+		if ok(diags) {
+			return diags
+		}
+		time.Sleep(10 * time.Millisecond)
+		c.mu.Lock()
+		c.versions[uri]++
+		v = c.versions[uri]
+		c.mu.Unlock()
+		c.Notify("textDocument/didChange", protocol.DidChangeTextDocumentParams{
+			TextDocument: protocol.VersionedTextDocumentIdentifier{URI: uri, Version: v},
+		})
+	}
+	return diags
+}
+
+// Messages joins diagnostic messages, one per line.
+func Messages(diags []protocol.Diagnostic) string {
+	var b strings.Builder
+	for _, d := range diags {
+		b.WriteString(d.Message + "\n")
+	}
+	return b.String()
+}
+
+// Contains is a WaitDiagnostics predicate.
+func Contains(substr string) func([]protocol.Diagnostic) bool {
+	return func(d []protocol.Diagnostic) bool { return strings.Contains(Messages(d), substr) }
 }
 
 // Diagnostics waits for the next publishDiagnostics for uri that has version >= minVersion

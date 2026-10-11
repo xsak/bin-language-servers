@@ -4,16 +4,16 @@
 [Zed](https://zed.dev) editor (and any other LSP client), so that **no Node.js / npm / npx** is
 needed on the machine.
 
-> Status: **milestone 1 (core) done**. The protocol core, document handling, test harness and container
-> build work. Language modules are coming in this order: JSON + YAML, Bash, Dockerfile + Compose, Ansible,
-> HTML + CSS. See [docs/DESIGN.md](docs/DESIGN.md#milestones).
+> Status: **JSON and YAML are available** (milestone 2), with JSON Schema validation, completion, hover and
+> outline, SchemaStore and Kubernetes support. Next: Bash, then Dockerfile + Compose, Ansible, HTML + CSS.
+> See [docs/DESIGN.md](docs/DESIGN.md#milestones).
 
 ## Languages
 
 | Language     | Subcommand    | Replaces (Node-based)                    | Status   |
 |--------------|---------------|------------------------------------------|----------|
-| JSON / JSONC | `bls json`    | `vscode-json-language-server`            | planned  |
-| YAML (+k8s)  | `bls yaml`    | `yaml-language-server`                   | planned  |
+| JSON / JSONC | `bls json`    | `vscode-json-language-server`            | ✅ available |
+| YAML (+k8s)  | `bls yaml`    | `yaml-language-server`                   | ✅ available |
 | Bash         | `bls bash`    | `bash-language-server`                   | planned  |
 | Dockerfile   | `bls dockerfile` | `dockerfile-language-server-nodejs`   | planned  |
 | Compose      | `bls compose` | `docker-compose-langserver`              | planned  |
@@ -66,6 +66,7 @@ existing server names at `bls`, for example in Gram's `~/.config/gram/settings.j
 
 ## Documentation
 
+- [docs/LANGUAGES.md](docs/LANGUAGES.md): features and settings per language, schema cache, limitations
 - [docs/DESIGN.md](docs/DESIGN.md): architecture, module interface, per-language plans, milestones
 - [docs/BUILD.md](docs/BUILD.md): container-based build, Dockerfile stages, updating Go
 - [docs/EDITORS.md](docs/EDITORS.md): Gram, Zed and VS Code configuration, server names, troubleshooting
@@ -81,6 +82,12 @@ internal/document/  immutable document snapshots, UTF-8/16/32 position mapping
 internal/lang/      module interfaces and registry
 internal/server/    lifecycle, document sync, debounced diagnostics, request routing
 internal/lsptest/   in-process LSP client for tests
+internal/tree/      format-neutral value tree with byte ranges (JSON and YAML)
+internal/jsonast/   error-tolerant JSON/JSONC parser and formatter
+internal/yamlast/   YAML (multi-document) to tree, via goccy/go-yaml
+internal/schema/    JSON Schema store/cache, SchemaStore catalog, validation, completion/hover data
+internal/schemalang/ shared code of the schema-driven modules
+langs/json/, langs/yaml/  language modules
 langs/all/          build-tag-guarded imports of every language module
 scripts/go.sh       run the Go toolchain in a container
 ```
