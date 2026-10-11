@@ -37,6 +37,9 @@ type Server struct {
 type Hooks struct {
 	// SchemaURL, if set, is used for every document unless a modeline says otherwise.
 	SchemaURL string
+	// Schema, if set, picks the schema URL per document (after the modeline, before settings);
+	// "" falls through to the normal YAML rules.
+	Schema func(doc *document.Doc, root *tree.Node) string
 	// Names returns extra completion names at path (a key position when isKey), e.g. service
 	// names inside depends_on. lines is the document text split into lines; ln is the cursor
 	// line.
@@ -46,6 +49,8 @@ type Hooks struct {
 // Name is an extra completion candidate from a hook.
 type Name struct {
 	Label, Detail string
+	Doc           string // markdown documentation
+	Insert        string // text to insert instead of the label (keys get ": " appended otherwise)
 }
 
 func (s *Server) Name() string { return "yaml" }
@@ -72,6 +77,11 @@ func (s *Server) schemaFor(ctx context.Context, doc *document.Doc, root *tree.No
 	}
 	if s.Hooks.SchemaURL != "" {
 		return s.Load(ctx, s.Hooks.SchemaURL, wait)
+	}
+	if s.Hooks.Schema != nil {
+		if u := s.Hooks.Schema(doc, root); u != "" {
+			return s.Load(ctx, u, wait)
+		}
 	}
 	set := s.Settings()
 	path := doc.Path()

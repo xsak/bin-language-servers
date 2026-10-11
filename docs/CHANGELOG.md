@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### 2026-10-11: milestone 5, Ansible
+
+Added:
+
+- `bls ansible`: ansible-lint schemas per file kind; module index read from installed ansible-core and
+  collections (DOCUMENTATION strings, YAML 1.1 booleans, doc markup to Markdown); completion of modules,
+  options, choices and roles; module/option hover; checks for unknown modules, invalid choices, missing
+  required and unknown options; ansible-lint on open/save (`--offline`, codeclimate); go-to-definition for
+  roles, includes/imports, vars files, templates/files and notify → handlers.
+- YAML hooks: per-document `Schema`, `Name.Doc` / `Name.Insert`, `yaml.DocAt`.
+
+Checked live: 628 modules indexed from Mason's ansible-core venv and `~/.ansible/collections`, ansible-lint
+26.9.0 found automatically, invalid `ufw` rule flagged, `copy` hover shows the real documentation.
+
 ### 2026-10-11: milestone 4, Dockerfile + Compose
 
 Added:

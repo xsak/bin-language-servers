@@ -199,6 +199,45 @@ document, plus:
 `Containerfile`, `Dockerfile.dev`, `*.dockerfile` → Dockerfile module; everything else → Compose module.
 Use it where an editor attaches one server to both languages (Zed's/Gram's `docker-language-server`).
 
+## Ansible (`ansible`)
+
+Status: **available** (milestone 5).
+
+Built on the YAML module. The schema is picked per file kind with ansible-lint's schemas (the ones SchemaStore
+uses): playbooks, task lists (`tasks/`, `handlers/`), vars (`vars/`, `defaults/`, `host_vars/`,
+`group_vars/`), role `meta/`, `requirements.yml`, `galaxy.yml`, inventories, execution environments. Files
+outside those paths are recognized by content (a list of plays is a playbook, another list is a task list).
+
+| Feature          | Details                                                                           |
+|------------------|-----------------------------------------------------------------------------------|
+| Module data      | Read directly from the installed module sources (`DOCUMENTATION` in each `.py`), no Python or `ansible-doc` run. ansible-core is found next to `ansible` on `PATH` or the configured path, in pip/pipx/system locations and in Mason's ansible-lint venv; collections from `ANSIBLE_COLLECTIONS_PATH`, `~/.ansible/collections`, `/usr/share/ansible/collections` and `site-packages/ansible_collections` |
+| Completion       | Module names (FQCN by default) at task positions, with short descriptions for builtin modules; module options with documentation; option choices and booleans; role names |
+| Hover            | Module documentation (description and option list) on the module key; option documentation (type, required, choices, default, aliases) on option keys; schema descriptions elsewhere |
+| Checks           | Unknown modules (only for collections that are installed, so missing collections don't cause noise); invalid option choices; missing required options; unknown options (only for modules whose documentation is complete, i.e. without documentation fragments) |
+| ansible-lint     | Runs when a file is opened and saved (it works on the saved file and takes seconds), with `--offline`; found on `PATH`, in the setting, or next to the detected ansible-core (e.g. Mason's venv). Findings link to the rule page |
+| Go to definition | `roles:` items, `role:`, `include_role`/`import_role` `name` → `roles/<name>/tasks/main.yml` (also `ns.collection.role`); `include_tasks`/`import_tasks`/`import_playbook`/`include_vars`/`vars_files` → the file; `template` `src` → `templates/`, `copy`/`script`/`unarchive` `src` → `files/`; `notify` → the handler (by `name` or `listen`, in the playbook's handlers or the role's `handlers/main.yml`) |
+
+Ansible's documentation markup (`C()`, `O()`, `V()`, `I()`, `B()`, `M()`, `L()`, `U()`) is shown as Markdown.
+
+### Settings
+
+Same names as ansible-language-server (section `ansible`); YAML settings (`yaml.schemas`, …) apply too:
+
+```jsonc
+{
+  "ansible": {
+    "ansible": {
+      "path": "ansible",                          // used to find ansible-core's modules
+      "useFullyQualifiedCollectionNames": true
+    },
+    "validation": {
+      "enabled": true,
+      "lint": { "enabled": true, "path": "ansible-lint", "arguments": "--profile production" }
+    }
+  }
+}
+```
+
 ## Schema download and cache
 
 - Downloaded schemas and the SchemaStore catalog are cached in `~/.cache/bls/schemas/` (shared by all

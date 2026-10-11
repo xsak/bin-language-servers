@@ -4,10 +4,11 @@
 [Zed](https://zed.dev) editor (and any other LSP client), so that **no Node.js / npm / npx** is
 needed on the machine.
 
-> Status: **JSON, YAML, Bash, Dockerfile and Compose are available** (milestones 1–4). JSON/YAML: JSON Schema
+> Status: **JSON, YAML, Bash, Dockerfile, Compose and Ansible are available** (milestones 1–5). JSON/YAML: JSON Schema
 > validation, completion, hover, outline, SchemaStore and Kubernetes. Bash: shellcheck with quick fixes, shfmt
 > formatting, navigation. Dockerfile/Compose: checks, completion, navigation between stages, services, networks
-> and volumes. Next: Ansible, then HTML + CSS.
+> and volumes. Ansible: module/option completion, hover and checks from the installed modules, navigation,
+> ansible-lint. Next: HTML + CSS.
 > See [docs/DESIGN.md](docs/DESIGN.md#milestones).
 
 ## Languages
@@ -20,7 +21,7 @@ needed on the machine.
 | Dockerfile   | `bls dockerfile` | `dockerfile-language-server-nodejs`   | ✅ available |
 | Compose      | `bls compose` | `docker-compose-langserver`              | ✅ available |
 | Both above   | `bls docker`  | one server for Dockerfile + Compose (Zed/Gram `docker-language-server`) | ✅ available |
-| Ansible      | `bls ansible` | `ansible-language-server`                | planned  |
+| Ansible      | `bls ansible` | `ansible-language-server`                | ✅ available |
 | HTML         | `bls html`    | `vscode-html-language-server`            | planned  |
 | CSS          | `bls css`     | `vscode-css-language-server`             | planned  |
 
@@ -93,6 +94,7 @@ internal/schemalang/ shared code of the schema-driven modules
 internal/extproc/   running optional external tools (shellcheck, bash help, whatis)
 langs/json/, langs/yaml/, langs/bash/, langs/dockerfile/, langs/compose/  language modules
 langs/docker/       routes Dockerfiles and Compose files to the right module
+langs/ansible/      Ansible (YAML module + module docs read from installed modules + ansible-lint)
 langs/all/          build-tag-guarded imports of every language module
 scripts/go.sh       run the Go toolchain in a container
 ```

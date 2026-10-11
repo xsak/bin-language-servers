@@ -177,7 +177,12 @@ later, Ansible.
 - Extra checks: unknown `depends_on`, `networks`, `volumes`, `secrets` and `configs` references;
   go-to-definition for those references; `extends` and `include` files.
 
-### Ansible (`ansible`)
+### Ansible (`ansible`) ✅ (2026-10-11)
+
+As built (differs from the plan): module data comes from parsing the `DOCUMENTATION` YAML string in the module
+`.py` files instead of running `ansible-doc` (no Python start-up, works with any ansible-core found on disk).
+Options added by documentation fragments aren't resolved, so the unknown-option check is skipped for modules
+that use fragments. The YAML hooks gained a per-document schema function and documented completion names.
 
 - Built on the YAML module with the ansible-lint schemas (playbook, tasks, vars, meta, galaxy,
   requirements).
@@ -241,7 +246,7 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
 2. **JSON + YAML + schema engine** ✅ (2026-10-11). User documentation: [LANGUAGES.md](LANGUAGES.md).
 3. **Bash** ✅ (2026-10-11).
 4. **Dockerfile + Compose** ✅ (2026-10-11).
-5. **Ansible**.
+5. **Ansible** ✅ (2026-10-11).
 6. **HTML + CSS**.
 7. `bls doctor`, release automation, a VS Code client extension (`editors/vscode/`, `.vsix` built in a
    container), a Zed/Gram extension if the binary overrides turn out to be fragile.

@@ -287,13 +287,27 @@ func (s *Server) hookItems(path tree.Path, isKey bool, lines []string, ln int, e
 			continue
 		}
 		text := n.Label
-		if isKey {
+		if n.Insert != "" {
+			text = n.Insert
+		} else if isKey {
 			text += ": "
 		}
-		items = append(items, protocol.CompletionItem{Label: n.Label, Kind: protocol.CompletionKindValue,
-			Detail: n.Detail, InsertText: text, SortText: "0" + n.Label})
+		it := protocol.CompletionItem{Label: n.Label, Kind: protocol.CompletionKindValue,
+			Detail: n.Detail, InsertText: text, SortText: "0" + n.Label, FilterText: n.Label}
+		if n.Doc != "" {
+			it.Documentation = &protocol.MarkupContent{Kind: protocol.MarkupMarkdown, Value: n.Doc}
+		}
+		items = append(items, it)
 	}
 	return items
+}
+
+// DocAt returns the root of the stream document containing off, or nil.
+func DocAt(text string, off int) *tree.Node {
+	if d := docAt(yamlast.Parse(text), off); d != nil {
+		return d.Root
+	}
+	return nil
 }
 
 // fallbackRoot builds a minimal root with apiVersion/kind from the raw lines of the current

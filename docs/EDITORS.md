@@ -49,7 +49,7 @@ Notes:
 - For Ansible, install Gram's `ansible` extension first. It provides the language and the
   `ansible-language-server` name; `bls` replaces its binary.
 
-### Ready now: JSON, YAML, Bash, Dockerfile and Compose
+### Ready now: JSON, YAML, Bash, Dockerfile, Compose and Ansible
 
 These work today (`bls list`). Your Gram `settings.jsonc` already has a `json-language-server` entry, so
 extend it and add the others:
@@ -78,9 +78,17 @@ extend it and add the others:
   },
   "dockerfile-language-server": {
     "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["dockerfile"] }
+  },
+  // needs the "ansible" extension, which defines the Ansible language and this server name
+  "ansible-language-server": {
+    "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["ansible"] }
   }
 }
 ```
+
+Ansible files are only recognized as "Ansible" for the paths the extension maps. To make more YAML files
+Ansible, extend `file_types`, e.g. `"file_types": { "Ansible": ["**/playbooks/*.yml", "**/roles/**/*.yml",
+"site.yml"] }`.
 
 If both `docker-language-server` and `dockerfile-language-server` run for a Dockerfile, you see every
 Dockerfile diagnostic twice. Keep one, e.g. with
