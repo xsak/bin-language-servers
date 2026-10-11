@@ -11,7 +11,7 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       # Same container-based targets as on a workstation; docker is preinstalled on the runner.
       - run: make check ENGINE=docker
       - run: make build ENGINE=docker && ./dist/bls list

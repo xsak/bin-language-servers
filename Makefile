@@ -8,7 +8,7 @@ GOARCH  ?= amd64
 GO      := ENGINE=$(ENGINE) scripts/go.sh
 PREFIX  ?= $(HOME)/.local
 
-.PHONY: all build test vet fmt tidy check release dist zed-extension generate install clean
+.PHONY: all build test vet fmt tidy check fuzz release dist zed-extension generate install clean
 
 all: check build
 
@@ -33,6 +33,12 @@ tidy:
 	$(GO) mod tidy
 
 check: vet test
+
+## fuzz: run every parser fuzz test for FUZZTIME (default 20s) each; crashes land in testdata/fuzz
+FUZZTIME ?= 20s
+FUZZ_PKGS := internal/jsonast internal/yamlast langs/toml langs/css langs/html langs/nginx langs/apache langs/ini langs/dockerfile
+fuzz:
+	@for p in $(FUZZ_PKGS); do echo "## $$p"; $(GO) test -run='^$$' -fuzz=FuzzParse -fuzztime=$(FUZZTIME) ./$$p || exit 1; done
 
 ## release: hermetic build via the Dockerfile (no host cache), result in ./dist/bls
 release:

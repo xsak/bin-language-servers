@@ -121,7 +121,8 @@ func (b *builder) node(n ast.Node) *tree.Node {
 			b.mappingValue(out, mv, seen)
 		}
 		out.End = b.containerEnd(out, v.End)
-		if len(v.Values) > 0 && !v.IsFlowStyle {
+		// A merge key ("<<: x") adds no property, so Props may be empty even with Values.
+		if len(out.Props) > 0 && !v.IsFlowStyle {
 			out.Start = min(out.Start, out.Props[0].KeyStart)
 		}
 		return out

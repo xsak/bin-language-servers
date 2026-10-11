@@ -285,7 +285,7 @@ func (s *Server) Notify(ctx context.Context, method string, params json.RawMessa
 
 	switch method {
 	case "initialized":
-		go s.pullConfiguration(ctx)
+		go s.guard("pullConfiguration", func() { s.pullConfiguration(ctx) })
 	case "textDocument/didOpen":
 		var p protocol.DidOpenTextDocumentParams
 		if s.decode(method, params, &p) {
@@ -306,7 +306,7 @@ func (s *Server) Notify(ctx context.Context, method string, params json.RawMessa
 		if s.decode(method, params, &p) {
 			if sl, ok := s.lang.(lang.SaveListener); ok {
 				if d := s.store.Get(p.TextDocument.URI); d != nil {
-					go sl.DidSave(ctx, d)
+					go s.guard("didSave", func() { sl.DidSave(ctx, d) })
 				}
 			}
 		}
@@ -332,7 +332,7 @@ func (s *Server) Notify(ctx context.Context, method string, params json.RawMessa
 		if s.decode(method, params, &p) {
 			if len(p.Settings) == 0 || string(p.Settings) == "null" || string(p.Settings) == "{}" {
 				// Pull-model clients send an empty notification as a hint to re-request.
-				go s.pullConfiguration(ctx)
+				go s.guard("pullConfiguration", func() { s.pullConfiguration(ctx) })
 				return
 			}
 			if c, ok := s.lang.(lang.Configurable); ok {
@@ -404,7 +404,15 @@ func (s *Server) scheduleDiagnostics(uri protocol.DocumentURI, delay time.Durati
 	if t := s.timers[uri]; t != nil {
 		t.Stop()
 	}
-	s.timers[uri] = time.AfterFunc(delay, func() { s.runDiagnostics(uri) })
+	s.timers[uri] = time.AfterFunc(delay, func() { s.guard("diagnostics", func() { s.runDiagnostics(uri) }) })
+}
+
+// guard runs fn on a background goroutine and logs a panic instead of letting it kill the
+// process. Requests are protected the same way inside jsonrpc.
+func (s *Server) guard(what string, fn func()) {
+	if err := jsonrpc.Guard(func() error { fn(); return nil }); err != nil {
+		s.log.Error("panic recovered", "in", what, "err", err)
+	}
 }
 
 func (s *Server) runDiagnostics(uri protocol.DocumentURI) {

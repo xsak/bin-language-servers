@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### 2026-10-11: security and robustness review
+
+Changed:
+
+- JSON-RPC bodies are capped at 256 MiB; a bad `Content-Length` is rejected instead of allocated.
+- Panics in request handlers become JSON-RPC internal errors; panics on background goroutines are
+  logged. The server survives a crashing parser.
+- A schema downloaded over HTTP can no longer `$ref` a `file:` URL (local roots and inline schemas can).
+- Schema cache writes use a unique temporary file per process before the rename.
+- Bash `source` navigation reads regular files of at most 4 MiB only (no FIFOs, devices, huge files).
+- nginx/Apache include navigation lists regular files only.
+- GitHub Actions: `actions/checkout` pinned to a commit (v6.1.0).
+
+Fixed (found by the new fuzz tests):
+
+- YAML: `<<: 000` (a merge key with a scalar value) crashed the tree builder.
+- HTML: raw-text elements (`<textarea>`, `<script>`, ...) with invalid UTF-8 in their content crashed
+  the parser, because the case-insensitive end-tag search lower-cased the text and shifted offsets.
+
+Added:
+
+- `FuzzParse` for every hand-written parser and `make fuzz`.
+
 ### 2026-10-11: license
 
 - Added the MIT `LICENSE`; release archives include it.

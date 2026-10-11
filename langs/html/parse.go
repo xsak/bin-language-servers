@@ -304,8 +304,32 @@ func isNameChar(c byte) bool {
 	return isAlpha(c) || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == ':' || c == '.'
 }
 
+// indexFold is a byte-wise, ASCII case-insensitive strings.Index. It must not lower-case s
+// with strings.ToLower: that rewrites invalid UTF-8 and would return offsets that don't map
+// back to s.
 func indexFold(s, sub string) int {
-	return strings.Index(strings.ToLower(s), strings.ToLower(sub))
+	for i := 0; i+len(sub) <= len(s); i++ {
+		if asciiEqualFold(s[i:i+len(sub)], sub) {
+			return i
+		}
+	}
+	return -1
+}
+
+func asciiEqualFold(a, b string) bool {
+	for i := 0; i < len(a); i++ {
+		x, y := a[i], b[i]
+		if 'A' <= x && x <= 'Z' {
+			x += 'a' - 'A'
+		}
+		if 'A' <= y && y <= 'Z' {
+			y += 'a' - 'A'
+		}
+		if x != y {
+			return false
+		}
+	}
+	return true
 }
 
 // Attr returns the attribute with that name.

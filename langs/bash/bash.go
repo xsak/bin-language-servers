@@ -408,9 +408,14 @@ func (s *Server) resolveSource(doc *document.Doc, name string) string {
 		}
 	}
 	for _, c := range candidates {
-		if fi, err := os.Stat(c); err == nil && !fi.IsDir() {
+		// Regular files only: "source /dev/stdin" or a FIFO would block the server, and a huge
+		// file is not a shell library.
+		if fi, err := os.Stat(c); err == nil && fi.Mode().IsRegular() && fi.Size() <= maxSourcedSize {
 			return c
 		}
 	}
 	return ""
 }
+
+// maxSourcedSize bounds the files read for "source"/"." navigation.
+const maxSourcedSize = 4 << 20

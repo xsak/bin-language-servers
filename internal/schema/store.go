@@ -145,7 +145,14 @@ func (e *entry) failedLongAgo() bool {
 
 func (s *Store) load(url string, e *entry) {
 	c := jsonschema.NewCompiler()
-	c.UseLoader(loaderFunc(s.document))
+	// A schema that came from the network must not pull local files through $ref.
+	localOK := strings.HasPrefix(url, "file:") || s.isInline(url)
+	c.UseLoader(loaderFunc(func(ref string) (any, error) {
+		if !localOK && strings.HasPrefix(ref, "file:") {
+			return nil, fmt.Errorf("%s: local file references are not allowed from a remote schema", ref)
+		}
+		return s.document(ref)
+	}))
 	c.UseRegexpEngine(lenientRegexp)
 	root, err := c.Compile(url)
 	if err != nil {
@@ -163,6 +170,14 @@ func (s *Store) load(url string, e *entry) {
 	close(e.done)
 	// Only now can waiters see the result, so notify after closing.
 	s.opts.OnLoaded()
+}
+
+func (s *Store) isInline(rawURL string) bool {
+	key, _, _ := strings.Cut(rawURL, "#")
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.inline[key]
+	return ok
 }
 
 type loaderFunc func(string) (any, error)
@@ -249,14 +264,27 @@ func (s *Store) fetch(rawURL string) ([]byte, error) {
 		return nil, err
 	}
 	if cachePath != "" {
-		if err := os.MkdirAll(filepath.Dir(cachePath), 0o755); err == nil {
-			tmp := cachePath + ".tmp"
-			if os.WriteFile(tmp, data, 0o644) == nil {
-				_ = os.Rename(tmp, cachePath)
-			}
-		}
+		s.writeCache(cachePath, data)
 	}
 	return data, nil
+}
+
+// writeCache stores data atomically; several bls processes may cache the same URL at once, so
+// each writes its own temporary file and renames it into place. Failures only cost the cache.
+func (s *Store) writeCache(path string, data []byte) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return
+	}
+	tmp, err := os.CreateTemp(dir, filepath.Base(path)+".*.tmp")
+	if err != nil {
+		return
+	}
+	_, werr := tmp.Write(data)
+	cerr := tmp.Close()
+	if werr != nil || cerr != nil || os.Rename(tmp.Name(), path) != nil {
+		_ = os.Remove(tmp.Name())
+	}
 }
 
 func (s *Store) download(rawURL string) ([]byte, error) {

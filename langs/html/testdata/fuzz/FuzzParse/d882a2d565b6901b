@@ -1,0 +1,2 @@
+go test fuzz v1
+string("<teXtAreA>\xa4\x89\x9b\xba\xd70\xa6</teXtAreA")

@@ -3,6 +3,7 @@ package schema
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -261,5 +262,29 @@ func TestHTTPFetchCacheAndCatalog(t *testing.T) {
 	}
 	if loaded.Load() == 0 {
 		t.Fatal("OnLoaded never called")
+	}
+}
+
+func TestRemoteSchemaCannotReadLocalFiles(t *testing.T) {
+	dir := t.TempDir()
+	secret := filepath.Join(dir, "secret.json")
+	if err := os.WriteFile(secret, []byte(`{"type":"string"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintf(w, `{"$ref": "file://%s"}`, filepath.ToSlash(secret))
+	}))
+	defer srv.Close()
+	store := NewStore(Options{})
+	if _, err := store.Get(context.Background(), srv.URL+"/schema.json"); err == nil || !strings.Contains(err.Error(), "not allowed") {
+		t.Fatalf("remote $ref to a local file was followed: %v", err)
+	}
+	// A local root schema may still reference local files.
+	local := filepath.Join(dir, "root.json")
+	if err := os.WriteFile(local, []byte(`{"$ref": "secret.json"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Get(context.Background(), "file://"+filepath.ToSlash(local)); err != nil {
+		t.Fatalf("local $ref: %v", err)
 	}
 }

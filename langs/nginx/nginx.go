@@ -661,7 +661,7 @@ func (s *Server) Definition(_ context.Context, doc *document.Doc, pos protocol.P
 				}
 				matches, _ := filepath.Glob(pattern)
 				for _, m := range matches {
-					if fi, err := os.Stat(m); err == nil && !fi.IsDir() {
+					if fi, err := os.Stat(m); err == nil && fi.Mode().IsRegular() {
 						out = append(out, protocol.Location{URI: document.PathToURI(m)})
 					}
 				}

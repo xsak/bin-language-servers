@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/textproto"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,6 +28,10 @@ const (
 	CodeRequestCancelled     = -32800
 	CodeContentModified      = -32801
 )
+
+// MaxMessageSize bounds a single message body, so a corrupt or hostile Content-Length cannot
+// make the server allocate without limit. Real documents are far smaller.
+const MaxMessageSize = 256 << 20
 
 // Error is a JSON-RPC error object. Handlers may return it to control the error code.
 type Error struct {
@@ -122,7 +127,7 @@ func (c *Conn) ReadMessage() (*Message, error) {
 		return nil, fmt.Errorf("read header: %w", err)
 	}
 	n, err := strconv.Atoi(strings.TrimSpace(hdr.Get("Content-Length")))
-	if err != nil || n < 0 {
+	if err != nil || n < 0 || n > MaxMessageSize {
 		return nil, fmt.Errorf("bad Content-Length %q", hdr.Get("Content-Length"))
 	}
 	body := make([]byte, n)
@@ -248,7 +253,7 @@ func (c *Conn) Serve(ctx context.Context, h Handler) error {
 				c.mu.Unlock()
 			}
 		case m.IsNotification():
-			h.Notify(ctx, m.Method, m.Params)
+			_ = Guard(func() error { h.Notify(ctx, m.Method, m.Params); return nil })
 		case m.IsRequest():
 			c.dispatch(ctx, h, m)
 		default:
@@ -274,7 +279,11 @@ func (c *Conn) dispatch(ctx context.Context, h Handler, m *Message) {
 			cancel()
 		}()
 
-		result, err := h.Handle(reqCtx, m.Method, m.Params)
+		var result any
+		err := Guard(func() (err error) {
+			result, err = h.Handle(reqCtx, m.Method, m.Params)
+			return err
+		})
 		resp := &Message{ID: m.ID}
 		switch {
 		case err != nil:
@@ -289,6 +298,18 @@ func (c *Conn) dispatch(ctx context.Context, h Handler, m *Message) {
 		}
 		_ = c.WriteMessage(resp)
 	}()
+}
+
+// Guard runs fn and turns a panic into an internal error, so one bad document or a parser bug
+// fails a single request instead of the whole server. The stack is kept in Error.Data.
+func Guard(fn func() error) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			stack, _ := json.Marshal(string(debug.Stack()))
+			err = &Error{Code: CodeInternalError, Message: fmt.Sprintf("internal error: %v", r), Data: stack}
+		}
+	}()
+	return fn()
 }
 
 func toError(ctx context.Context, err error) *Error {

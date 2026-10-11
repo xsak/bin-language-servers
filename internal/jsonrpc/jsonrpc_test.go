@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -65,5 +66,45 @@ func TestCallAndCancel(t *testing.T) {
 	callCancel()
 	if err := <-done; err == nil {
 		t.Fatal("expected cancellation error")
+	}
+}
+
+type panicHandler struct{}
+
+func (panicHandler) Handle(_ context.Context, method string, _ json.RawMessage) (any, error) {
+	if method == "boom" {
+		var m map[string]int
+		m["x"] = 1 // nil map write: panics
+	}
+	return "ok", nil
+}
+
+func (panicHandler) Notify(context.Context, string, json.RawMessage) { panic("notify") }
+
+func TestPanicBecomesInternalError(t *testing.T) {
+	aIn, bOut := io.Pipe()
+	bIn, aOut := io.Pipe()
+	a, b := NewConn(aIn, aOut), NewConn(bIn, bOut)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() { _ = b.Serve(ctx, panicHandler{}) }()
+	go func() { _ = a.Serve(ctx, panicHandler{}) }()
+
+	_ = a.Notify("explode", nil) // a panicking notification must not end the server
+	err := a.Call(ctx, "boom", nil, nil)
+	var rpcErr *Error
+	if !errors.As(err, &rpcErr) || rpcErr.Code != CodeInternalError || !strings.Contains(rpcErr.Message, "nil map") {
+		t.Fatalf("err = %v", err)
+	}
+	var got string
+	if err := a.Call(ctx, "echo", nil, &got); err != nil || got != "ok" {
+		t.Fatalf("server did not survive: %q %v", got, err)
+	}
+}
+
+func TestContentLengthLimit(t *testing.T) {
+	r := strings.NewReader("Content-Length: 999999999999\r\n\r\n{}")
+	if _, err := NewConn(r, io.Discard).ReadMessage(); err == nil || !strings.Contains(err.Error(), "Content-Length") {
+		t.Fatalf("err = %v", err)
 	}
 }

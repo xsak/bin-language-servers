@@ -241,8 +241,33 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
   `testdata/` against `*.golden` files.
 - An in-process LSP client harness (`internal/lsptest`) that runs full sessions without spawning
   processes.
+- Fuzz tests (`FuzzParse`) for every hand-written parser: JSON, YAML wrapper, TOML, CSS, HTML, nginx,
+  Apache, INI and Dockerfile. `make fuzz` runs them (`FUZZTIME=60s make fuzz` for longer); their seed
+  corpus and any crash found (`testdata/fuzz/`) run as ordinary unit tests afterwards.
 - CI: the same container targets as local builds (`make check`, `make release`), with release builds
   for linux/amd64, linux/arm64 and darwin/arm64.
+
+## Security and robustness
+
+bls only ever talks to the editor over stdio, but it parses untrusted files, downloads schemas and
+runs optional tools, so a few rules apply:
+
+- **Input bounds.** A JSON-RPC body is limited to `jsonrpc.MaxMessageSize` (256 MiB); schema
+  downloads to 64 MiB; files read for Bash `source` navigation must be regular files of at most
+  4 MiB (never FIFOs or devices); include/`source` targets are only reported, never executed.
+- **Panics stay local.** A panic in a request handler becomes a JSON-RPC internal error for that one
+  request (`jsonrpc.Guard`); panics on background goroutines (diagnostics, save hooks, configuration
+  pulls) are logged. A single bad document cannot take the server down.
+- **Remote schemas cannot read local files.** `$ref` to a `file:` URL is followed only when the root
+  schema itself is a local file or an inline schema from the settings. Document-driven schema
+  references (`$schema`, YAML modelines, `#:schema`) do fetch arbitrary http(s) URLs, exactly like
+  vscode-json-languageserver and yaml-language-server; set `BLS_OFFLINE=1` to stop all downloads.
+- **Cache writes are atomic** (temporary file + rename, unique per process), so concurrent bls
+  processes cannot corrupt each other's schema cache.
+- **External tools** (shellcheck, hadolint, ansible-lint, `bash help`, `whatis`) run with a 10 s
+  timeout, with arguments from the user's own settings only; document text goes in through stdin.
+- **Build and CI.** No toolchain on the host; GitHub Actions are pinned to commit SHAs with
+  read-only `GITHUB_TOKEN` permissions except for the release job.
 
 ## Milestones
 

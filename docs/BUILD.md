@@ -17,6 +17,7 @@ make build                 # ./dist/bls (static, CGO_ENABLED=0)
 make test                  # go test ./...
 make vet                   # go vet ./...
 make check                 # vet + test
+make fuzz                  # fuzz every parser for FUZZTIME (default 20s) each
 make fmt                   # gofmt in place
 make tidy                  # go mod tidy (updates go.mod / go.sum)
 make release               # hermetic build through the Dockerfile, result in ./dist/bls
