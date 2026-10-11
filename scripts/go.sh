@@ -39,6 +39,11 @@ main() {
         user_args=(--user "$(id -u):$(id -g)")
     fi
 
+    # Cross-compilation target, only when asked for (default: the container's native platform).
+    local -a target_args=()
+    if [[ -n "${GOOS:-}" ]]; then target_args+=(-e "GOOS=$GOOS"); fi
+    if [[ -n "${GOARCH:-}" ]]; then target_args+=(-e "GOARCH=$GOARCH"); fi
+
     local -a tty_args=()
     if [[ -t 0 && -t 1 ]]; then
         tty_args=(-it)
@@ -52,6 +57,7 @@ main() {
         -e GOCACHE=/cache/build \
         -e CGO_ENABLED=0 \
         -e GOFLAGS="${GOFLAGS:-}" \
+        "${target_args[@]}" \
         -w /src \
         "$GO_IMAGE" go "$@"
 }

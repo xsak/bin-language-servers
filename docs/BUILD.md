@@ -21,6 +21,9 @@ make fmt                   # gofmt in place
 make tidy                  # go mod tidy (updates go.mod / go.sum)
 make release               # hermetic build through the Dockerfile, result in ./dist/bls
 make install               # build, then copy to ~/.local/bin/bls
+make dist                  # release archives (linux/darwin, amd64/arm64), extension, SHA256SUMS
+make zed-extension         # Zed/Gram extension only (Rust in a container)
+make generate              # refresh embedded HTML/CSS data and nginx/Apache directive tables
 make build TAGS=no_html,no_css   # leave languages out
 make ENGINE=docker build   # use docker instead of podman
 ```
@@ -76,6 +79,37 @@ MIT). The files are committed, so builds stay offline. To refresh them (download
 ```bash
 scripts/go.sh generate ./internal/webdata/
 ```
+
+`internal/confdata` holds the nginx and Apache directive tables, generated from the official docs:
+
+```bash
+scripts/go.sh generate ./internal/confdata/
+```
+
+## Zed/Gram extension
+
+`editors/zed` is a small Rust crate compiled to `wasm32-wasip2`. It is built in the pinned
+`docker.io/library/rust:1.99.0-alpine3.24` image (cargo cache in `~/.cache/bls-build/cargo`), so Rust isn't
+installed on the host either:
+
+```bash
+scripts/zed-extension.sh [install]
+```
+
+## Releases
+
+`make dist` (`scripts/dist.sh`) cross-compiles in the Go container for `linux/amd64`, `linux/arm64`,
+`darwin/amd64` and `darwin/arm64` (static, `CGO_ENABLED=0`), packs `bls_<version>_<os>_<arch>.tar.gz` (binary,
+README, third-party license), adds `bls-zed-extension_<version>.tar.gz` and writes `SHA256SUMS`, all in
+`dist/release/`. `TARGETS="linux/amd64" make dist` limits the targets; `SKIP_EXTENSION=1` skips the extension.
+
+GitHub Actions use exactly the same targets with docker:
+
+- `.github/workflows/ci.yml`: `make check` and a build on every push to `main` and on pull requests.
+- `.github/workflows/release.yml`: on a `v*` tag, `make check`, `make dist VERSION=<tag>`, then a GitHub
+  release with the archives and checksums (`gh release create --generate-notes`).
+
+To release: `git tag v0.1.0 && git push origin v0.1.0`.
 
 ## Version
 

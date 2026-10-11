@@ -25,7 +25,6 @@ These already have good servers that don't need Node. We only document the Zed c
 | Helm           | `helm-ls`                                | Go             |
 | SQL            | `sqls`                                   | Go             |
 | Python         | `ruff` (lint/format), `ty` or `pyrefly` (types) | Rust     |
-| TOML           | `taplo`                                  | Rust           |
 
 A Python type checker or a TypeScript server is out of scope.
 
@@ -254,5 +253,7 @@ used. Fallback: a small Zed extension (Rust to WASM, no Node) that registers `bl
 4. **Dockerfile + Compose** ✅ (2026-10-11).
 5. **Ansible** ✅ (2026-10-11).
 6. **HTML + CSS** ✅ (2026-10-11).
-7. `bls doctor`, release automation, a VS Code client extension (`editors/vscode/`, `.vsix` built in a
-   container), a Zed/Gram extension if the binary overrides turn out to be fragile.
+7. **TOML, INI (systemd/Quadlet), nginx, Apache + Zed/Gram extension** ✅ (2026-10-11). The extension is
+   needed because Gram/Zed can only attach servers whose names an extension declares.
+8. **`bls doctor`, release automation (`make dist` + GitHub Actions), HTML formatting** ✅ (2026-10-11).
+   (A VS Code extension was dropped.)

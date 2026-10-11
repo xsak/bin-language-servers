@@ -34,3 +34,6 @@ go.work.sum
 
 # Build output
 /dist/
+
+# Rust build output
+/editors/zed/target/

@@ -8,7 +8,7 @@ GOARCH  ?= amd64
 GO      := ENGINE=$(ENGINE) scripts/go.sh
 PREFIX  ?= $(HOME)/.local
 
-.PHONY: all build test vet fmt tidy check release install clean
+.PHONY: all build test vet fmt tidy check release dist zed-extension generate install clean
 
 all: check build
 
@@ -38,6 +38,18 @@ check: vet test
 release:
 	$(ENGINE) build --target export --build-arg VERSION=$(VERSION) --build-arg TAGS="$(TAGS)" \
 		--build-arg TARGETARCH=$(GOARCH) --output type=local,dest=dist .
+
+## dist: release archives for all targets + Zed/Gram extension + SHA256SUMS in ./dist/release
+dist:
+	ENGINE=$(ENGINE) VERSION=$(VERSION) scripts/dist.sh
+
+## zed-extension: build the Zed/Gram extension into ./dist/zed-extension (Rust in a container)
+zed-extension:
+	ENGINE=$(ENGINE) scripts/zed-extension.sh
+
+## generate: refresh embedded data (HTML/CSS data, nginx/Apache directives) from the network
+generate:
+	$(GO) generate ./internal/webdata/ ./internal/confdata/
 
 ## install: copy dist/bls to $(PREFIX)/bin
 install: build

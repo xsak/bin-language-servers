@@ -266,7 +266,65 @@ Status: **available** (milestone 6), same embedded data.
 | Outline        | Element tree named like `div#main.card.big`; CSS rules inside `<style>`                |
 | Linked editing | Renaming a start tag renames its end tag (`textDocument/linkedEditingRange`)           |
 
-No formatting yet. Script content is ignored.
+| Formatting     | Re-indents by element nesting (no reflow: text, tags and attributes stay on their lines); continuation lines of multi-line start tags one level deeper; `<pre>`/`<textarea>` verbatim; `<script>`/`<style>` content shifted as a block; broken documents untouched |
+
+Script content is otherwise ignored.
+
+## TOML (`toml`)
+
+Status: **available**. Built on the schema engine like JSON/YAML.
+
+| Feature     | Details                                                                                   |
+|-------------|-------------------------------------------------------------------------------------------|
+| Diagnostics | Syntax (strings, numbers, dates, arrays, inline tables), duplicate keys, tables defined twice, keys redefined as tables; JSON Schema validation |
+| Schemas     | `#:schema <url or path>` on a line of its own (taplo convention), `toml.schemas` setting (same map format as `yaml.schemas`), SchemaStore catalog (`pyproject.toml`, `Cargo.toml`, `ruff.toml`, `rustfmt.toml`, …) |
+| Completion  | Keys of the current `[table]` (also dotted keys like `tool.ruff.li`), table names in `[headers]`, values (enums, defaults, booleans) |
+| Hover       | Schema descriptions on keys, values and header segments                                   |
+| Outline     | Tables and keys                                                                           |
+| Formatting  | `key = value` spacing, `[table]` headers without padding, blank line before headers, no trailing whitespace; multi-line strings and arrays untouched |
+
+## INI, systemd units, podman Quadlet (`ini`)
+
+Status: **available**. Covers `.ini`, `.conf`, `.cfg`, git config, systemd units (`.service`, `.timer`,
+`.socket`, `.mount`, `.path`, …) and Quadlet files (`.container`, `.volume`, `.network`, `.pod`, `.kube`,
+`.image`, `.build`).
+
+| Feature     | Details                                                                                   |
+|-------------|-------------------------------------------------------------------------------------------|
+| Diagnostics | Unclosed `[section`, text after a header, lines without `=` (allowed in git config / `.cnf`); unit files: settings outside a section, `Key: value` instead of `Key=Value`, invalid values for directives with a fixed set (`Type`, `Restart`, `KillMode`, booleans, …) |
+| Completion  | Unit/Quadlet files: section names, common directives per section with descriptions, values (`Type`, `Restart`, `WantedBy` targets, …); every file: keys already used in sections of the same name |
+| Hover       | Directive descriptions in unit/Quadlet files                                              |
+| Outline     | Sections and keys                                                                         |
+| Formatting  | No trailing whitespace, single blank lines, `[section]` without padding, consistent separator (`Key=Value` in unit files, otherwise the file's prevailing style) |
+
+The directive list is a curated subset (written for bls), so unknown directives are never reported.
+
+## nginx (`nginx`)
+
+Status: **available**. Data: all 808 directives from the nginx.org reference (syntax, default, contexts,
+module, description).
+
+| Feature          | Details                                                                              |
+|------------------|--------------------------------------------------------------------------------------|
+| Diagnostics      | Missing `;`, unclosed/stray braces, unterminated strings; unknown directives; directives in the wrong context (`proxy_pass` directly in `server`), respecting the `http`/`stream`/`mail` family; data blocks (`map`, `types`, `geo`, …) are skipped. Files without `http`/`events` at the top (e.g. `sites-enabled/*.conf`) are treated as fragments, so top-level `server` blocks are fine |
+| Completion       | Directives allowed in the current block (block directives as `name { … }` snippets), argument choices (`on`/`off`, …), variables after `$` (common ones plus `set`/`map` variables in the file) |
+| Hover            | Syntax, description, default, contexts, module, link                                 |
+| Outline          | Blocks (`http`, `server` with `listen`/`server_name`, `location`, `upstream`, …)    |
+| Formatting       | Re-indent by brace depth, trim trailing whitespace, collapse blank lines             |
+| Go to definition | `include` files (globs), `proxy_pass http://name` → `upstream name`                  |
+
+## Apache httpd (`apache`)
+
+Status: **available**. Data: 730 directives from the httpd 2.4 quick reference.
+
+| Feature          | Details                                                                              |
+|------------------|--------------------------------------------------------------------------------------|
+| Diagnostics      | Unmatched/unclosed containers (`<VirtualHost>` … `</VirtualHost>`); unknown directives; directives in the wrong context (server config / virtual host / directory / .htaccess; `<IfModule>`, `<If>` etc. are transparent) |
+| Completion       | Directives allowed in the current context, containers as snippets with their closing tag, closing tag after `</`, argument choices (`On|Off`) |
+| Hover            | Syntax, description, default, contexts, module, status, link                         |
+| Outline          | Containers (`VirtualHost` with its `ServerName`)                                      |
+| Formatting       | Re-indent by container depth, trim, collapse blank lines                              |
+| Go to definition | `Include` / `IncludeOptional` files (relative to `ServerRoot`)                       |
 
 ## Schema download and cache
 

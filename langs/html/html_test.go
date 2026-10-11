@@ -162,3 +162,15 @@ func TestCompletionHoverLinked(t *testing.T) {
 		t.Fatalf("symbols = %+v", syms)
 	}
 }
+
+func TestFormat(t *testing.T) {
+	src := "<!DOCTYPE html>\n<html>\n<head>\n<title>T</title>\n<style>\n      .a { color: red }\n        .b { x: y }\n</style>\n</head>\n<body>\n<div class=\"a\"\n data-x=\"1\">\n<p>Hello <b>you</b></p>   \n\n\n<ul>\n<li>one\n<li>two\n</ul>\n<pre>\n  keep\n    this\n</pre>\n</div>\n</body>\n</html>\n"
+	want := "<!DOCTYPE html>\n<html>\n  <head>\n    <title>T</title>\n    <style>\n      .a { color: red }\n        .b { x: y }\n    </style>\n  </head>\n  <body>\n    <div class=\"a\"\n      data-x=\"1\">\n      <p>Hello <b>you</b></p>\n\n      <ul>\n        <li>one\n        <li>two\n      </ul>\n      <pre>\n  keep\n    this\n</pre>\n    </div>\n  </body>\n</html>\n"
+	got, ok := Format(src, "  ", "\n")
+	if !ok || got != want {
+		t.Fatalf("got:\n%s\nwant:\n%s", got, want)
+	}
+	if _, ok := Format("<div><span></div>", "  ", "\n"); ok {
+		t.Fatal("formatted a broken document")
+	}
+}

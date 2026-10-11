@@ -1,0 +1,22 @@
+id = "bls"
+name = "bls"
+version = "0.1.0"
+schema_version = 1
+authors = ["xsak"]
+description = "Node-free language servers (bls) for INI / systemd / Quadlet, TOML and Apache httpd config."
+repository = "https://github.com/xsak/bin-language-servers"
+
+# Languages that have no language server of their own in Zed/Gram. For the others (JSON, YAML,
+# Bash, Docker, Ansible, HTML, CSS, nginx) point the existing server name at bls in settings.
+
+[language_servers.bls-ini]
+name = "bls (INI)"
+languages = ["ini"]
+
+[language_servers.bls-toml]
+name = "bls (TOML)"
+languages = ["TOML"]
+
+[language_servers.bls-apache]
+name = "bls (Apache)"
+languages = ["Apache Config"]

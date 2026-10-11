@@ -1,0 +1,4 @@
+# Plain-text language (no grammar) so Apache files get a language server.
+name = "Apache Config"
+path_suffixes = [".htaccess", "htaccess", "httpd.conf", "apache2.conf"]
+line_comments = ["# "]

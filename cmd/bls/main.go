@@ -3,6 +3,7 @@
 //	bls <language> [--stdio] [--log-file PATH] [--log-level debug|info|warn|error]
 //	bls version
 //	bls list
+//	bls doctor
 //
 // Called through a symlink named "<language>-ls" or "bls-<language>", the language is taken
 // from the program name.
@@ -20,6 +21,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/xsak/bin-language-servers/internal/doctor"
 	"github.com/xsak/bin-language-servers/internal/jsonrpc"
 	"github.com/xsak/bin-language-servers/internal/lang"
 	"github.com/xsak/bin-language-servers/internal/server"
@@ -50,6 +52,13 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "%-12s %s\n", info.Name, info.Description)
 		}
 		return 0
+	case "doctor":
+		var names []string
+		for _, info := range lang.All() {
+			names = append(names, info.Name)
+		}
+		self, _ := os.Executable()
+		return doctor.Run(stdout, doctor.Options{Version: version, Languages: names, Self: self})
 	}
 
 	info, ok := lang.Lookup(name)
@@ -143,6 +152,7 @@ func usage(w io.Writer) {
 	fmt.Fprint(w, `Usage:
   bls <language> [--stdio] [--log-file PATH] [--log-level LEVEL]
   bls list        languages compiled into this binary
+  bls doctor      check tools, schema cache and Gram/Zed configuration
   bls version
 
 Logs go to stderr unless --log-file is given (Zed shows stderr in its LSP log).

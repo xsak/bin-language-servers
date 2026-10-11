@@ -97,7 +97,7 @@ func ParseSettings(raw json.RawMessage, section, root string, store *Store) (Set
 	if v, ok := top["schemas"]; ok {
 		var err error
 		switch section {
-		case "yaml":
+		case "yaml", "toml":
 			err = parseYAMLSchemas(v, root, &s)
 		default:
 			err = parseJSONSchemas(v, root, store, &s)

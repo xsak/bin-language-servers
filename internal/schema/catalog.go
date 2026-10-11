@@ -68,6 +68,9 @@ func (c *Catalog) Match(ctx context.Context, path string, filter func([]string) 
 // ForYAML keeps catalog entries meant for YAML files.
 func ForYAML(globs []string) bool { return anySuffix(globs, ".yaml", ".yml") }
 
+// ForTOML keeps catalog entries meant for TOML files.
+func ForTOML(globs []string) bool { return anySuffix(globs, ".toml") }
+
 // ForJSON keeps catalog entries that are not for YAML or TOML files.
 func ForJSON(globs []string) bool {
 	for _, g := range globs {

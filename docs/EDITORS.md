@@ -156,7 +156,36 @@ format as the Red Hat / VS Code servers:
 }
 ```
 
+### The bls extension (INI, TOML, Apache)
+
+Gram's `ini` and `toml` extensions declare no language server, and there is no Apache language at all, so
+there is no server name to point at bls. The `bls` extension in `editors/zed/` declares `bls-ini`,
+`bls-toml` and `bls-apache` for the languages `ini`, `TOML` and a new plain-text language `Apache Config`
+(`.htaccess`, `httpd.conf`, `apache2.conf`; map more files with `file_types`). It is Rust compiled to
+WebAssembly, built in a container:
+
+```bash
+scripts/zed-extension.sh            # -> dist/zed-extension/
+scripts/zed-extension.sh install    # also copies it into Gram's and Zed's extensions/installed/bls
+```
+
+Then restart Gram. The extension runs `bls` from `PATH` (or `lsp.bls-ini.binary.path` etc.) and passes
+`lsp.<server>.settings` to it, e.g. `"bls-toml": { "settings": { "toml": { "schemas": { ... } } } }`.
+
+### nginx
+
+Install Gram's/Zed's `nginx` extension (it provides the `Nginx` language and a server called `nginx`) and
+point that server at bls:
+
+```jsonc
+"nginx": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["nginx"] } }
+```
+
 ### Check that it works
+
+Run `bls doctor`: it lists every server name pointed at bls, flags wrong paths and unknown subcommands,
+installed extensions whose servers aren't pointed at bls, Zed's downloaded Node.js and Prettier, and recent
+language-server errors from the editor log.
 
 1. Save the settings. Gram restarts the affected servers; if it doesn't, run `editor: restart language server`
    from the command palette.
@@ -184,7 +213,9 @@ Node-based server has to be either replaced by `bls` or turned off, and Prettier
 | CSS            | `vscode-css-language-server`  | `css`          | built in                        |
 | HTML           | `vscode-html-language-server` | `html`         | `html` extension                |
 | Dockerfile     | `dockerfile-language-server`  | `dockerfile`   | `dockerfile` extension          |
-| Docker Compose | `docker-language-server`      | `docker`       | `docker-compose` extension      |
+| Docker Compose | `docker-compose`              | `compose`      | `docker-compose` extension      |
+| Dockerfile + Compose | `docker-language-server` | `docker`     | `dockerfile` extension          |
+| nginx          | `nginx`                       | `nginx`        | `nginx` extension               |
 | Ansible        | `ansible-language-server`     | `ansible`      | `ansible` extension             |
 
 ### settings.json
@@ -201,6 +232,8 @@ Merge this into the existing settings (replace `/home/xsak`). Again, only enable
     "vscode-html-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["html"] } },
     "dockerfile-language-server":  { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["dockerfile"] } },
     "docker-language-server":      { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["docker"] } },
+    "docker-compose":              { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["compose"] } },
+    "nginx":                       { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["nginx"] } },
     "ansible-language-server":     { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["ansible"] } }
   },
 

@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+### 2026-10-11: milestone 8, doctor, releases, HTML formatting
+
+Added:
+
+- `bls doctor`: installation, optional tools (shellcheck, hadolint, bash, whatis, ansible-lint, ansible-core),
+  schema cache, Gram/Zed settings (server → subcommand, missing binaries, unknown subcommands), installed
+  extensions without bls, Zed's Node.js and Prettier, recent language-server errors. Exit code 1 on problems.
+- `make dist` / `scripts/dist.sh`: release archives for linux/darwin × amd64/arm64, Zed/Gram extension,
+  SHA256SUMS. `scripts/go.sh` passes `GOOS`/`GOARCH` through.
+- GitHub Actions: `ci.yml` (check + build), `release.yml` (tag → check, dist, GitHub release).
+- HTML formatting: nesting-based re-indent, verbatim `<pre>`/`<textarea>`, shifted `<script>`/`<style>`.
+- `make zed-extension`, `make generate`.
+
+### 2026-10-11: milestone 7, TOML, INI, nginx, Apache, Zed/Gram extension
+
+Added:
+
+- `bls toml`: own tolerant parser to the shared tree, JSON Schema (`#:schema`, settings, SchemaStore), completion
+  for tables/dotted keys/values, hover, outline, formatter.
+- `bls ini`: INI/.conf/git config, systemd units and podman Quadlet (curated directives: completion, hover,
+  closed-value checks), outline, style-preserving formatter.
+- `internal/confdata`: nginx (808) and Apache (730) directive tables generated from the official docs.
+- `bls nginx`: syntax, unknown directives, context checks per http/stream/mail family, completion, variables,
+  hover, outline, re-indent, include/upstream navigation.
+- `bls apache`: container structure, unknown directives, context checks (.htaccess aware), completion,
+  hover, outline, re-indent, Include navigation.
+- `editors/zed`: Zed/Gram extension (API 0.6, wasm32-wasip2) declaring `bls-ini`, `bls-toml`, `bls-apache`
+  and an `Apache Config` language; built in a Rust container by `scripts/zed-extension.sh`.
+- Docs: Zed's docker-compose server name is `docker-compose`, nginx's is `nginx`.
+
+Checked live: pyproject.toml against SchemaStore, systemd hover, nginx and Apache context errors.
+
 ### 2026-10-11: milestone 6, HTML + CSS
 
 Added:

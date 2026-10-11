@@ -1,0 +1,17 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # Same container-based targets as on a workstation; docker is preinstalled on the runner.
+      - run: make check ENGINE=docker
+      - run: make build ENGINE=docker && ./dist/bls list
