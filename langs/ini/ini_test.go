@@ -26,6 +26,28 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestBareKeysAllowed(t *testing.T) {
+	// bareKeysAllowedPath works on slash-separated paths, as produced by filepath.ToSlash on
+	// any platform (Windows paths arrive with backslashes from the editor).
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{"/home/u/.gitconfig", true},
+		{"/home/u/repo/.git/config", true},
+		{"C:/Users/me/.gitconfig", true},
+		{"C:/Users/me/repo/.git/config", true},
+		{"C:/Users/me/repo/mysql/my.cnf", true},
+		{"/home/u/repo/config", false},
+		{"C:/Users/me/repo/config", false},
+	}
+	for _, tt := range tests {
+		if got := bareKeysAllowedPath(tt.path); got != tt.want {
+			t.Errorf("bareKeysAllowedPath(%q) = %v, want %v", tt.path, got, tt.want)
+		}
+	}
+}
+
 func TestSystemd(t *testing.T) {
 	c := lsptest.Start(t, &Server{})
 	c.Initialize("file:///w")

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -194,13 +195,19 @@ func parseYAMLSchemas(raw json.RawMessage, root string, s *Settings) error {
 // workspaceGlobs anchors patterns starting with "/" at the workspace root (VS Code semantics);
 // other patterns match anywhere.
 func workspaceGlobs(globs []string, root string) *GlobSet {
+	return workspaceGlobsSlash(globs, filepath.ToSlash(root))
+}
+
+// workspaceGlobsSlash is the same in slash form; everything stays in slash form so the result
+// is the same on every platform.
+func workspaceGlobsSlash(globs []string, rootSlash string) *GlobSet {
 	out := make([]string, 0, len(globs))
 	for _, g := range globs {
 		neg := strings.HasPrefix(g, "!")
 		g = strings.TrimPrefix(g, "!")
-		g = expandHome(g)
-		if strings.HasPrefix(g, "/") && root != "" && !strings.HasPrefix(g, root+"/") && !fileExists(g) {
-			g = filepath.ToSlash(filepath.Join(root, g))
+		g = filepath.ToSlash(expandHome(g))
+		if strings.HasPrefix(g, "/") && rootSlash != "" && !strings.HasPrefix(g, rootSlash+"/") && !fileExists(g) {
+			g = path.Join(rootSlash, g)
 		}
 		if neg {
 			g = "!" + g

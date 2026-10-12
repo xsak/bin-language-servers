@@ -119,17 +119,26 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 
 // languageFromArgs picks the subcommand, or derives it from a symlink name.
 func languageFromArgs(args []string) (string, []string) {
-	prog := filepath.Base(args[0])
-	switch {
-	case strings.HasPrefix(prog, "bls-"):
-		return strings.TrimPrefix(prog, "bls-"), args[1:]
-	case strings.HasSuffix(prog, "-ls") && prog != "bls":
-		return strings.TrimSuffix(prog, "-ls"), args[1:]
+	if name, ok := languageFromName(filepath.Base(args[0])); ok {
+		return name, args[1:]
 	}
 	if len(args) < 2 {
 		return "", nil
 	}
 	return args[1], args[2:]
+}
+
+// languageFromName derives the language from a program name like "bls-yaml" or "yaml-ls",
+// with or without the Windows ".exe" suffix.
+func languageFromName(name string) (string, bool) {
+	name = strings.TrimSuffix(name, ".exe")
+	switch {
+	case strings.HasPrefix(name, "bls-"):
+		return strings.TrimPrefix(name, "bls-"), true
+	case strings.HasSuffix(name, "-ls") && name != "bls":
+		return strings.TrimSuffix(name, "-ls"), true
+	}
+	return "", false
 }
 
 func newLogger(stderr io.Writer, path, level string) (*slog.Logger, func(), error) {

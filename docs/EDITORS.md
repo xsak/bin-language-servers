@@ -16,6 +16,35 @@ bls list                # check which languages are compiled in
 
 Use an **absolute path** in editor settings; `~` is not expanded.
 
+## Windows
+
+`bls` cross-compiles to a single static `bls.exe` (amd64) with no dependencies:
+
+```powershell
+# from a release, or locally: make build-windows -> dist/bls.exe
+# put it somewhere on PATH or just note its location, e.g.
+C:\Users\me\.local\bin\bls.exe list
+C:\Users\me\.local\bin\bls.exe doctor
+```
+
+The same mechanism as below works in Zed on Windows: use the absolute path in the `"lsp"` block, for
+example `"path": "C:/Users/me/.local/bin/bls.exe"` (forward slashes work in Zed's JSON settings).
+Settings and logs live under `%APPDATA%`:
+
+- Zed settings: `%APPDATA%\Zed\settings.json`
+- Gram settings: `%APPDATA%\gram\settings.jsonc`
+- `bls doctor` looks for the settings, extensions and the schema cache (`%LOCALAPPDATA%\bls\schemas`)
+  there on Windows.
+
+Symlink-style names also work with the `.exe` suffix: `bls-yaml.exe`, `yaml-ls.exe`.
+
+Optional tools are looked up on `PATH` (`LookPath` understands `.exe` and `PATHEXT`) and degrade
+gracefully when absent: install `shellcheck`, `hadolint` or `ansible-lint` via winget/scoop to get
+those checks; without `bash`/`shfmt` on `PATH`, the Bash module gives syntax-based completion and
+navigation but no shellcheck diagnostics or formatting. Ansible **module documentation** discovery
+(`bls ansible`) still looks at Linux paths only, so on Windows module completion falls back to what
+Ansible's own YAML syntax offers.
+
 ## Gram
 
 Gram is a Zed fork without AI, telemetry or Node. Out of the box it refuses to

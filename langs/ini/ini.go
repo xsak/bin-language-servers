@@ -71,8 +71,13 @@ func unitFile(path string) bool { return sectionsFor(filepath.Ext(path)) != nil 
 
 // bareKeysAllowed: git config and MySQL option files accept keys without a value.
 func bareKeysAllowed(path string) bool {
-	b := filepath.Base(path)
-	return b == ".gitconfig" || b == "config" && strings.Contains(path, "/.git/") || strings.HasSuffix(b, ".cnf") ||
+	return bareKeysAllowedPath(filepath.ToSlash(path))
+}
+
+// bareKeysAllowedPath matches a slash-separated path.
+func bareKeysAllowedPath(p string) bool {
+	b := filepath.Base(p)
+	return b == ".gitconfig" || b == "config" && strings.Contains(p, "/.git/") || strings.HasSuffix(b, ".cnf") ||
 		b == ".editorconfig" || b == ".gitmodules"
 }
 

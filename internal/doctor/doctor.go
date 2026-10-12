@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -113,9 +114,9 @@ func Run(w io.Writer, opts Options) int {
 	for _, l := range opts.Languages {
 		langs[l] = true
 	}
-	editor(r, "Gram", filepath.Join(opts.Home, ".config", "gram", "settings.jsonc"),
+	editor(r, "Gram", filepath.Join(configDir(opts.Home), "gram", "settings.jsonc"),
 		filepath.Join(dataDir(opts.Home), "gram"), langs, false)
-	editor(r, "Zed", filepath.Join(opts.Home, ".config", "zed", "settings.json"),
+	editor(r, "Zed", filepath.Join(configDir(opts.Home), "zed", "settings.json"),
 		filepath.Join(dataDir(opts.Home), "zed"), langs, true)
 
 	fmt.Fprintf(w, "\n%d problem(s), %d warning(s)\n", r.errors, r.warns)
@@ -154,14 +155,15 @@ func editor(r *report, name, settingsPath, dataPath string, langs map[string]boo
 		if len(args) > 0 {
 			mode, _ = args[0].(string)
 		}
-		if !strings.Contains(filepath.Base(path), "bls") && !strings.HasSuffix(path, "-ls") {
+		name := strings.TrimSuffix(path, ".exe")
+		if !strings.Contains(filepath.Base(path), "bls") && !strings.HasSuffix(name, "-ls") {
 			continue
 		}
 		pointed[server] = true
 		switch {
 		case !isExecutable(path):
 			r.fail("%s → %s: file not found or not executable", server, path)
-		case mode == "" && !strings.HasSuffix(path, "-ls"):
+		case mode == "" && !strings.HasSuffix(name, "-ls"):
 			r.fail("%s → %s: missing the bls subcommand in \"arguments\"", server, path)
 		case mode != "" && !langs[mode]:
 			r.fail("%s → bls %s: this bls has no %q language (see bls list)", server, mode, mode)
@@ -257,7 +259,13 @@ func isExecutable(p string) bool {
 		p = filepath.Join(home, p[2:])
 	}
 	fi, err := os.Stat(p)
-	return err == nil && !fi.IsDir() && fi.Mode()&0o111 != 0
+	if err != nil || fi.IsDir() {
+		return false
+	}
+	if runtime.GOOS == "windows" {
+		return true // permission bits carry no executable meaning on Windows
+	}
+	return fi.Mode()&0o111 != 0
 }
 
 func dirExists(p string) bool {
@@ -341,14 +349,34 @@ func dirStats(dir string) (int, int64) {
 	return n, size
 }
 
+// configDir is where editors keep their settings: %APPDATA% on Windows, ~/.config elsewhere.
+func configDir(home string) string {
+	if runtime.GOOS == "windows" {
+		if d, err := os.UserConfigDir(); err == nil && d != "" {
+			return d
+		}
+	}
+	return filepath.Join(home, ".config")
+}
+
 func cacheDir(home string) string {
+	if runtime.GOOS == "windows" {
+		if d, err := os.UserCacheDir(); err == nil && d != "" {
+			return d
+		}
+	}
 	if d := os.Getenv("XDG_CACHE_HOME"); d != "" {
 		return d
 	}
 	return filepath.Join(home, ".cache")
 }
 
+// dataDir is where editors keep data (extensions, logs): %APPDATA% on Windows,
+// ~/.local/share elsewhere.
 func dataDir(home string) string {
+	if runtime.GOOS == "windows" {
+		return configDir(home)
+	}
 	if d := os.Getenv("XDG_DATA_HOME"); d != "" {
 		return d
 	}

@@ -4,6 +4,8 @@ package json
 
 import (
 	"context"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -37,12 +39,24 @@ func (s *Server) Init(_ context.Context, env lang.Env) error {
 
 func (s *Server) TriggerCharacters() []string { return []string{`"`, ":"} }
 
+// windowsPaths is true when paths arrive case-insensitively (Windows), so well-known editor
+// directories like %APPDATA%\Zed match their lowercase forms. Tests may override it.
+var windowsPaths = runtime.GOOS == "windows"
+
 // jsonc reports whether comments and trailing commas are allowed.
-func jsonc(doc *document.Doc) bool {
-	if doc.LanguageID == "jsonc" || doc.LanguageID == "json5" {
+func jsonc(languageID, path string) bool {
+	if languageID == "jsonc" || languageID == "json5" {
 		return true
 	}
-	p := doc.Path()
+	p := filepath.ToSlash(path)
+	if windowsPaths {
+		p = strings.ToLower(p)
+	}
+	return hasJSONCSuffix(p)
+}
+
+// hasJSONCSuffix matches a slash-separated path against the well-known JSONC file names.
+func hasJSONCSuffix(p string) bool {
 	for _, suffix := range []string{".jsonc", "tsconfig.json", "jsconfig.json", ".code-workspace",
 		"/.vscode/settings.json", "/zed/settings.json", "/zed/keymap.json", "/gram/settings.json",
 		"/gram/keymap.json", ".eslintrc.json", "devcontainer.json"} {
@@ -54,7 +68,7 @@ func jsonc(doc *document.Doc) bool {
 }
 
 func (s *Server) parse(doc *document.Doc) *jsonast.Result {
-	return jsonast.Parse(doc.Text, jsonast.Options{Comments: jsonc(doc)})
+	return jsonast.Parse(doc.Text, jsonast.Options{Comments: jsonc(doc.LanguageID, doc.Path())})
 }
 
 // schemaFor picks the schema: "$schema" in the document, then settings, then SchemaStore.

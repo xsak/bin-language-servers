@@ -8,7 +8,7 @@ GOARCH  ?= amd64
 GO      := ENGINE=$(ENGINE) scripts/go.sh
 PREFIX  ?= $(HOME)/.local
 
-.PHONY: all build test vet fmt tidy check fuzz release dist zed-extension generate install clean
+.PHONY: all build build-windows windows-check test vet fmt tidy check fuzz release dist zed-extension generate install clean
 
 all: check build
 
@@ -16,6 +16,16 @@ all: check build
 build:
 	@mkdir -p dist
 	$(GO) build -trimpath -tags "$(TAGS)" -ldflags "-s -w -X main.version=$(VERSION)" -o dist/bls ./cmd/bls
+
+## build-windows: cross-compiled Windows binary in ./dist/bls.exe
+build-windows:
+	@mkdir -p dist
+	GOOS=windows GOARCH=amd64 $(GO) build -trimpath -tags "$(TAGS)" -ldflags "-s -w -X main.version=$(VERSION)" -o dist/bls.exe ./cmd/bls
+
+## windows-check: vet and build for windows/amd64 (tests only run on the native platform)
+windows-check:
+	GOOS=windows GOARCH=amd64 $(GO) vet ./...
+	GOOS=windows GOARCH=amd64 $(GO) build -trimpath -o /dev/null ./cmd/bls
 
 ## test: unit and protocol tests
 test:

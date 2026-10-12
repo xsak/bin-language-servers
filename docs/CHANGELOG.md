@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+### 2026-10-12: Windows support (bls.exe, windows/amd64 releases)
+
+Added:
+
+- Windows build: `make build-windows` (static `dist/bls.exe`), `make windows-check` (vet + build for
+  windows/amd64), a `windows` CI job that cross-compiles (a Windows test binary can't run on the Linux
+  runner).
+- `make dist` / GitHub releases now ship `bls_<version>_windows_amd64.zip` (with `bls.exe`), zipped by
+  the new stdlib-Go helper `scripts/mkzip` (unit-tested, no host-side zip tools).
+- `docs/EDITORS.md`: Windows section (settings under `%APPDATA%`, optional tools via winget/scoop,
+  graceful degradation without bash/shfmt).
+
+Changed (path handling, so editor paths on Windows behave like on Unix):
+
+- JSON: the JSONC file-name detection (`.vscode/settings.json`, `gram/settings.json`, ...) and INI:
+  the git-config / MySQL detection now normalize the path to slashes first (backslashed Windows paths).
+- Schema settings: workspace-root-anchored globs (`/k8s/*.yaml`) compute in slash form, so a
+  `C:\ws` root anchors the same as `/ws`.
+- `bls` binary names: the `bls-<language>` / `<language>-ls` symlink dispatch accepts a `.exe` suffix.
+- `bls doctor` on Windows: settings `%APPDATA%\{gram,zed}`, data/extensions under `%APPDATA%`, schema
+  cache under `%LOCALAPPDATA%\bls\schemas`, executability without Unix permission bits, `.exe` in
+  `<language>-ls` names.
+
 ### 2026-10-11: live test in Gram and Zed
 
 - Gram 3.3.0: `bls json`, `yaml`, `bash` and (through the bls extension) `bls toml` run and work.

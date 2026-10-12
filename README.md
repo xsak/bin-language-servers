@@ -56,10 +56,11 @@ also symlink the binary as `<language>-ls` or `bls-<language>` and drop the subc
 Go is not installed on the host; every build runs in a container (podman by default, docker works too):
 
 ```bash
-make build      # -> dist/bls
-make check      # go vet + go test
-make install    # -> ~/.local/bin/bls
-make dist       # release archives for linux/darwin amd64/arm64 + Zed/Gram extension + SHA256SUMS
+make build           # -> dist/bls
+make build-windows   # -> dist/bls.exe (cross-compiled, static)
+make check           # go vet + go test
+make install         # -> ~/.local/bin/bls
+make dist            # release archives for linux/darwin amd64/arm64 + windows/amd64 (zip) + Zed/Gram extension + SHA256SUMS
 ```
 
 Details: [docs/BUILD.md](docs/BUILD.md).

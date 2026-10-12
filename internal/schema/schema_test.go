@@ -180,6 +180,18 @@ func TestGlobs(t *testing.T) {
 	}
 }
 
+func TestWorkspaceGlobsWindowsRoot(t *testing.T) {
+	// A Windows workspace root (slash form, as produced by filepath.ToSlash on Windows) must
+	// anchor the same as a Unix one.
+	gs := workspaceGlobsSlash([]string{"/k8s/*.yaml"}, "C:/ws")
+	if !gs.Match("C:/ws/k8s/app.yaml") {
+		t.Error("anchored glob should match a file in the same workspace")
+	}
+	if gs.Match("C:/other/k8s/app.yaml") {
+		t.Error("anchored glob must not match outside the workspace")
+	}
+}
+
 func TestSettingsShapes(t *testing.T) {
 	store := NewStore(Options{Offline: true})
 	js, err := ParseSettings(json.RawMessage(`{"json": {"validate": {"enable": false},
