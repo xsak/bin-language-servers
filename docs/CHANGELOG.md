@@ -8,6 +8,9 @@
 - `docs/EDITORS.md`: tested minimal Gram snippet, list of Gram servers bls does not replace.
 - `docs/EDITORS.md`: how to silence Gram's "Download disabled" errors (Tailwind, package-version-server) and a warning about pasted `lsp` blocks.
 - `docs/EDITORS.md`: Gram attaches `vscode-html-language-server` to HTML next to `superhtml`; disable it (`bls html` runs via `superhtml`, confirmed).
+- Gram: Apache config through the `bls` extension (`bls-apache`) confirmed. Every language that Gram can attach is now tested live.
+- Gram: INI and systemd units through the `bls` extension (`bls-ini`) confirmed.
+- Gram: CSS through `bls css` (server name `vscode-css-language-server`) confirmed.
 - Gram: HTML through `bls html` (server name `superhtml`) and the `language_servers` exclusions tested live; no more "Download disabled" notices.
 - Zed: `bls json` started after adding the `lsp` overrides; works. Snippet in `docs/EDITORS.md`.
 

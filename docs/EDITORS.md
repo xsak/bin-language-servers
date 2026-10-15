@@ -34,7 +34,7 @@ need checking the first time you open such a file):
 | JSON / JSONC    | `json-language-server`       | `json`          | built in                         |
 | YAML            | `yaml-language-server`       | `yaml`          | built in                         |
 | Bash            | `bash-language-server`       | `bash`          | built in                         |
-| CSS             | `vscode-css-language-server`* | `css`          | built in                         |
+| CSS             | `vscode-css-language-server` | `css`           | built in                         |
 | HTML            | `superhtml`                  | `html`          | built in                         |
 | Dockerfile      | `dockerfile-language-server` | `dockerfile`    | `dockerfile` extension (not installed now) |
 | Docker Compose  | `docker-language-server`     | `docker` (routes Dockerfile + Compose) | `dockerfile` or `docker-compose` extension |
@@ -64,7 +64,7 @@ the `"lsp"` block of `~/.config/gram/settings.jsonc`:
   // built in; tested live in Gram 3.3.0 together with the `languages` block below
   "superhtml":            { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["html"] } },
 
-  // Zed's name, never seen in Gram's log: check with `dev: open language server logs` on a .css file
+  // tested live in Gram 3.3.0
   "vscode-css-language-server": { "binary": { "path": "/home/xsak/.local/bin/bls", "arguments": ["css"] } }
 
   // Only after installing the matching Gram extension (see the sections below):
@@ -76,7 +76,7 @@ the `"lsp"` block of `~/.config/gram/settings.jsonc`:
 
 No `lsp` entry is needed for INI, TOML and Apache: the `bls` extension declares `bls-ini`, `bls-toml` and
 `bls-apache`, and finds `bls` on `PATH`. TOML was tested live in Gram (a `bls toml` process starts when a
-`.toml` file is opened).
+`.toml` file is opened). INI, systemd unit files and Apache config were tested live in Gram as well.
 
 Gram servers that bls does not replace, because bls has no equivalent: `lemminx` (XML), `tailwindcss-language-server`,
 `package-version-server`, `ruff` and `basedpyright` (Python). They stay disabled by Gram ("Download disabled"
